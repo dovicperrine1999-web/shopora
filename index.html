@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shopora — Local Marketplace</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--blue:#2563eb;--dark:#0f172a;--muted:#64748b;--bg:#f5f7fb;--line:#e2e8f0;--card:#fff;--red:#dc2626;--green:#059669;--amber:#d97706}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--dark)}
+button,input,select,textarea{font:inherit}button{cursor:pointer}.top{background:#0b1220;color:#cbd5e1;text-align:center;font-size:12px;padding:7px}
+header{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line)}
+.nav{max-width:1240px;margin:auto;display:flex;align-items:center;gap:14px;padding:12px 18px}.logo{font-weight:900;font-size:28px;color:#0b1220;cursor:pointer}.logo span{color:var(--blue)}
+.search{flex:1;display:flex;border:1px solid #cbd5e1;border-radius:12px;overflow:hidden;background:#fff}.search input{flex:1;border:0;padding:12px 14px;outline:0}.search button{border:0;background:var(--blue);color:#fff;padding:0 18px} .search button:disabled{opacity:.65;cursor:wait}
+.navbtn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 13px;font-weight:700}.navbtn.blue{background:var(--blue);color:#fff;border-color:var(--blue)}
+.badge{background:#ef4444;color:#fff;border-radius:999px;padding:2px 7px;font-size:11px;margin-left:4px}.avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;background:#e2e8f0;vertical-align:middle;margin-right:7px}
+main{max-width:1240px;margin:auto;padding:24px 18px}.hero{background:linear-gradient(120deg,#102f5e,#2563eb);color:#fff;border-radius:24px;padding:42px;margin-bottom:26px}.hero h1{font-size:42px;margin:0 0 10px}.hero p{max-width:700px;color:#dbeafe}.hero .actions{display:flex;gap:10px;margin-top:20px}.btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 14px;font-weight:800}.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}.btn.danger{color:var(--red);border-color:#fecaca}.btn.success{color:#047857;border-color:#a7f3d0;background:#ecfdf5}.btn.small{padding:7px 10px;font-size:13px}
+.sectionhead{display:flex;justify-content:space-between;align-items:center;margin:25px 0 13px}.sectionhead h2{margin:0}.cats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.cat{padding:18px 10px;border:1px solid var(--line);background:#fff;border-radius:14px;text-align:center;font-weight:800}
+.cat{gap:8px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.catIcon{font-size:30px;line-height:1;display:block;filter:saturate(1.05)}
+.cat span:last-child{line-height:1.15}
+.cat:hover{border-color:#93c5fd;color:var(--blue)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;min-width:0}.cardimg{height:235px;background:#eef2f7;position:relative}.cardimg img{width:100%;height:100%;object-fit:cover}.heart{position:absolute;right:10px;top:10px;border:0;background:#fff;border-radius:50%;width:38px;height:38px;font-size:20px}.photo-count{position:absolute;bottom:9px;right:9px;background:#111827dd;color:#fff;border-radius:999px;padding:4px 8px;font-size:12px}.cardbody{padding:13px}.card h3{margin:0 0 5px;font-size:16px}.desc{color:var(--muted);font-size:13px;min-height:34px}.price{font-size:21px;font-weight:900;margin:10px 0}.old{color:#94a3b8;text-decoration:line-through;font-size:13px;margin-left:5px}.shopline{font-size:12px;color:var(--muted);margin-bottom:10px}.linkbtn{border:0;background:none;padding:0;color:#155eef;font:inherit;font-weight:700;cursor:pointer;text-decoration:underline}.linkbtn:hover{text-decoration:none}.cardactions{display:flex;gap:8px}.cardactions>*{flex:1}
+.empty{padding:50px;text-align:center;background:#fff;border:1px dashed #cbd5e1;border-radius:16px;color:var(--muted)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px}.filters input,.filters select,.form input,.form select,.form textarea{border:1px solid #cbd5e1;border-radius:10px;padding:11px;background:#fff;outline:0;width:100%}.filters input{max-width:330px}.filters select{max-width:190px}
+.modal{position:fixed;inset:0;background:#0008;z-index:100;display:none;align-items:center;justify-content:center;padding:18px}.modal.open{display:flex}.panel{background:#fff;border-radius:18px;width:min(980px,100%);max-height:94vh;overflow:auto;box-shadow:0 30px 80px #0005}.panel.narrow{width:min(520px,100%)}.panelhead{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;padding:17px 20px;z-index:2}.panelhead h2{margin:0}.close{border:0;background:#f1f5f9;border-radius:10px;width:36px;height:36px}.panelbody{padding:20px}.form{display:grid;gap:11px}.imagePreview{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.seller-onboarding{max-width:620px;margin:20px auto;padding:25px;border:1px solid var(--line);border-radius:18px;background:#fff;text-align:center}.onboard-icon{font-size:48px;margin-bottom:8px}.seller-onboarding .form{text-align:left;margin-top:18px}.loading{text-align:center;padding:30px;color:#64748b}.seller-onboarding .btn{width:100%}.media-editor{display:grid;grid-template-columns:1fr 1.6fr;gap:14px;margin-top:4px}.media-box{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}.media-box h3{margin:0 0 4px}.shop-media-preview{height:150px;border:1px dashed #cbd5e1;border-radius:12px;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden;margin:10px 0;color:#64748b}.shop-media-preview img{width:100%;height:100%;object-fit:contain}.shop-cover-preview{height:150px;border:1px dashed #cbd5e1;border-radius:12px;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden;margin:10px 0;color:#64748b}.shop-cover-preview img{width:100%;height:100%;object-fit:cover}@media(max-width:760px){.media-editor{grid-template-columns:1fr}}.imagePreview img{width:86px;height:86px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}.muted{color:#64748b;font-size:12px}.help{cursor:help;color:#2563eb}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.notice{background:#eff6ff;border:1px solid #bfdbfe;padding:12px;border-radius:12px;color:#1e40af}.error{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:12px;border-radius:12px}.successmsg{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;padding:12px;border-radius:12px}
+.tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px}.tab{border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 12px;font-weight:700}.tab.active{background:#dbeafe;color:#1d4ed8;border-color:#93c5fd}
+.detail{display:grid;grid-template-columns:1fr 1fr;gap:24px}.gallery{background:#f1f5f9;border-radius:14px;overflow:hidden}.gallerymain{height:440px}.gallerymain img{width:100%;height:100%;object-fit:contain}.thumbs{display:flex;gap:7px;padding:8px;overflow:auto}.thumbs img{width:70px;height:70px;object-fit:cover;border-radius:8px;border:2px solid transparent;cursor:pointer}.thumbs img.active{border-color:var(--blue)}
+.stars{color:#f59e0b}.timeline{display:flex;justify-content:space-between;gap:5px;margin:18px 0}.step{flex:1;text-align:center;font-size:11px;color:#94a3b8}.step i{display:block;width:26px;height:26px;border-radius:50%;background:#e2e8f0;margin:0 auto 5px}.step.done{color:#166534}.step.done i{background:#22c55e}
+.order{border:1px solid var(--line);border-radius:14px;background:#fff;margin-bottom:12px;padding:15px} .bankLogo{width:46px;height:46px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:#eef4ff;border:1px solid #dbe5f5;font-weight:900;font-size:12px;flex:0 0 46px} .orderhead{display:flex;justify-content:space-between;gap:12px}.status{display:inline-block;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:800;background:#f1f5f9}.status.paid,.status.completed,.status.delivered{background:#dcfce7;color:#166534}.status.shipped{background:#dbeafe;color:#1d4ed8}.status.pending{background:#fef3c7;color:#92400e}.status.cancelled{background:#fee2e2;color:#991b1b}
+.sellergrid{display:grid;grid-template-columns:210px 1fr;gap:18px}.side{border:1px solid var(--line);border-radius:14px;padding:8px;background:#fff;height:max-content}.side button{display:block;width:100%;text-align:left;border:0;background:#fff;border-radius:9px;padding:11px;font-weight:800}.side button.active,.side button:hover{background:#eff6ff;color:#2563eb}.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{padding:15px;border:1px solid var(--line);border-radius:13px;background:#fff}.stat b{font-size:24px;display:block}
+.tablewrap{overflow:auto}.table{width:100%;border-collapse:collapse;background:#fff}.table th,.table td{padding:11px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}.table th{background:#f8fafc}
+.cartrow{display:grid;grid-template-columns:70px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.cartrow img{width:70px;height:70px;object-fit:cover;border-radius:9px}.qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:9px;overflow:hidden}.qty button{border:0;background:#f8fafc;padding:6px 10px}.qty span{padding:0 10px}
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);z-index:200;background:#0f172a;color:#fff;padding:12px 17px;border-radius:11px;display:none}.toast.show{display:block}
+footer{background:#0b1220;color:#cbd5e1;margin-top:50px;padding:35px 18px}.foot{max-width:1240px;margin:auto;display:grid;grid-template-columns:2fr 1fr 1fr;gap:20px} .footlink{display:block;background:none;border:0;padding:2px 0;color:inherit;text-align:left;font:inherit;cursor:pointer}.footlink:hover{text-decoration:underline}
+
+.report-table{width:100%;border-collapse:collapse;font-size:13px;background:#fff}.report-table th,.report-table td{border:1px solid #dbe3ef;padding:9px;text-align:left;vertical-align:top}.report-table th{background:#eff6ff}.tablewrap{overflow:auto;border:1px solid #dbe3ef;border-radius:12px}
+@media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr)}.cats{grid-template-columns:repeat(3,1fr)}.detail{grid-template-columns:1fr}.sellergrid{grid-template-columns:1fr}.statgrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.nav{flex-wrap:wrap}.search{order:3;flex-basis:100%}.grid{grid-template-columns:repeat(2,1fr)}.cats{grid-template-columns:repeat(2,1fr)}.hero h1{font-size:31px}.formgrid{grid-template-columns:1fr}.foot{grid-template-columns:1fr}.cardimg{height:180px}}
+
+.shop-page{padding-bottom:40px}
+.shop-back{margin:12px 0 18px}
+.shop-hero{border:1px solid var(--border,#d9e1ee);border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 8px 30px rgba(20,40,80,.07)}
+.shop-cover{height:210px;background:linear-gradient(135deg,#12386d,#2d65e8);overflow:hidden}
+.shop-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.shop-head{display:flex;gap:18px;align-items:center;padding:18px 22px 22px}
+.shop-logo{width:88px;height:88px;border-radius:18px;background:#eef3fb;border:4px solid #fff;box-shadow:0 3px 14px rgba(0,0,0,.12);overflow:hidden;display:flex;align-items:center;justify-content:center;flex:none;font-size:32px;font-weight:800}
+.shop-logo img{width:100%;height:100%;object-fit:cover}
+.shop-head h1{margin:0 0 5px;font-size:28px}.shop-head p{margin:0 0 8px;color:#5d6b82}.shop-search{display:flex;gap:10px;margin:22px 0}.shop-search input{flex:1;border:1px solid #cbd6e6;border-radius:12px;padding:14px;font-size:15px}.shopcats{margin-bottom:22px}.shopcat{cursor:pointer;min-height:100px}.shopcat.active{border-color:#2864e8;box-shadow:0 0 0 2px rgba(40,100,232,.12)}.shopcat .caticon{font-size:32px;display:block;margin-bottom:7px}.muted{color:#68758a;font-size:14px}
+@media(max-width:650px){.shop-cover{height:150px}.shop-head{padding:15px}.shop-logo{width:68px;height:68px}.shop-head h1{font-size:22px}.shop-search{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="top">Shopora • Local marketplace • Buy from local sellers</div>
+<header><div class="nav">
+<div class="logo" onclick="goHome()">Shop<span>ora</span></div>
+<div class="search"><input id="search" placeholder="Search products, categories or shops…" onkeydown="if(event.key==='Enter')searchCatalog()"><button type="button" id="searchBtn" onclick="searchCatalog()">Search</button></div>
+<button class="navbtn" id="accountBtn" onclick="openAccount()">Account</button>
+<button class="navbtn" onclick="openNotifications()">🔔 <span id="notifCount"></span></button>
+<button class="navbtn blue" onclick="openCart()">🛒 <span id="cartCount">0</span></button>
+</div></header>
+
+<main id="app">
+<section class="hero"><h1>Shop smart. Shop local.</h1><p>Discover products from verified local sellers. Track every order, manage returns and shop securely.</p><div class="actions"><button class="btn primary" onclick="document.getElementById('products').scrollIntoView()">Shop now</button><button class="btn" onclick="openSeller()">Become a seller</button></div></section>
+
+<div class="sectionhead"><h2>Categories</h2><button class="btn small" onclick="loadCategories()">Refresh</button></div>
+<div id="categories" class="cats"></div>
+
+<div class="sectionhead"><h2 id="productTitle">Popular products</h2><button class="btn small" onclick="loadCatalog()">Refresh</button></div>
+<div class="filters"><input id="minPrice" type="number" placeholder="Min MUR"><input id="maxPrice" type="number" placeholder="Max MUR"><select id="sort"><option value="newest">Newest</option><option value="popular">Popular</option><option value="rating">Top rated</option><option value="price_asc">Price low → high</option><option value="price_desc">Price high → low</option></select><button class="btn primary" onclick="loadCatalog()">Apply</button></div>
+<section id="products" class="grid"></section>
+</main>
+
+<footer><div class="foot"><div><h2>Shopora</h2><p id="footerDescription">A local marketplace built for customers.</p></div><div id="customerFooter"><b>Customers</b><p><button class="footlink" onclick="openOrders()">Orders</button><button class="footlink" onclick="openAccount()">Wishlist</button><button class="footlink" onclick="manageAddresses()">Addresses</button><button class="footlink" onclick="openOrders()">Returns</button></p></div><div id="sellerFooter" hidden><b>Sellers</b><p><button class="footlink" onclick="openSeller()">Seller Centre</button><button class="footlink" onclick="openSellerTab('products')">Products</button><button class="footlink" onclick="openSellerTab('orders')">Orders</button><button class="footlink" onclick="openSellerTab('payments')">Payments</button></p></div></div></footer>
+
+<!-- Account -->
+<div id="account" class="modal"><div class="panel narrow"><div class="panelhead"><h2>Account</h2><button class="close" onclick="closeModal('account')">×</button></div><div class="panelbody" id="accountBody"></div></div></div>
+
+<!-- Auth -->
+<div id="auth" class="modal"><div class="panel narrow"><div class="panelhead"><h2 id="authTitle">Create account</h2><button class="close" onclick="closeModal('auth')">×</button></div><div class="panelbody" id="authBody"></div></div></div>
+
+<!-- Product -->
+<div id="productModal" class="modal"><div class="panel"><div class="panelhead"><h2>Product details</h2><button class="close" onclick="closeModal('productModal')">×</button></div><div class="panelbody" id="productBody"></div></div></div>
+
+<!-- Cart -->
+<div id="cart" class="modal"><div class="panel narrow"><div class="panelhead"><h2>Shopping cart</h2><button class="close" onclick="closeModal('cart')">×</button></div><div class="panelbody" id="cartBody"></div></div></div>
+
+<!-- Orders -->
+<div id="orders" class="modal"><div class="panel"><div class="panelhead"><h2>My Orders</h2><button class="close" onclick="closeModal('orders')">×</button></div><div class="panelbody" id="ordersBody"></div></div></div>
+
+<!-- Notifications -->
+<div id="notifications" class="modal"><div class="panel narrow"><div class="panelhead"><h2>Notifications</h2><button class="close" onclick="closeModal('notifications')">×</button></div><div class="panelbody" id="notificationsBody"></div></div></div>
+
+<!-- Seller -->
+<div id="seller" class="modal"><div class="panel"><div class="panelhead"><h2>Seller Centre</h2><button class="close" onclick="closeModal('seller')">×</button></div><div class="panelbody" id="sellerBody"></div></div></div>
+
+<!-- Checkout -->
+<div id="checkout" class="modal"><div class="panel"><div class="panelhead"><h2>Secure checkout</h2><button class="close" onclick="closeModal('checkout')">×</button></div><div class="panelbody" id="checkoutBody"></div></div></div>
+<div id="toast" class="toast"></div>
+
+<script src="config.js"></script>
+<script src="app.js?v=60"></script>
+</body>
+</html>
