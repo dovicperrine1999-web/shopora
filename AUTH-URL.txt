@@ -1,8 +1,0 @@
-Production URL:
-https://shopora-mauve-two.vercel.app
-
-Set the same URL in Supabase:
-Authentication -> URL Configuration -> Site URL
-
-Allowed Redirect URL:
-https://shopora-mauve-two.vercel.app/**
