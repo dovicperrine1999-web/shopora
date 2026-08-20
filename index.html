@@ -1,0 +1,1531 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shopora — Local Marketplace</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--blue:#2563eb;--dark:#0f172a;--muted:#64748b;--bg:#f5f7fb;--line:#e2e8f0;--card:#fff;--red:#dc2626;--green:#059669;--amber:#d97706}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--dark)}
+button,input,select,textarea{font:inherit}button{cursor:pointer}.top{background:#0b1220;color:#cbd5e1;text-align:center;font-size:12px;padding:7px}
+header{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line)}
+.nav{max-width:1240px;margin:auto;display:flex;align-items:center;gap:14px;padding:12px 18px}.logo{font-weight:900;font-size:28px;color:#0b1220;cursor:pointer}.logo span{color:var(--blue)}
+.search{flex:1;display:flex;border:1px solid #cbd5e1;border-radius:12px;overflow:hidden;background:#fff}.search input{flex:1;border:0;padding:12px 14px;outline:0}.search button{border:0;background:var(--blue);color:#fff;padding:0 18px} .search button:disabled{opacity:.65;cursor:wait}
+.navbtn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 13px;font-weight:700}.navbtn.blue{background:var(--blue);color:#fff;border-color:var(--blue)}
+.badge{background:#ef4444;color:#fff;border-radius:999px;padding:2px 7px;font-size:11px;margin-left:4px}.avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;background:#e2e8f0;vertical-align:middle;margin-right:7px}
+main{max-width:1240px;margin:auto;padding:24px 18px}.hero{background:linear-gradient(120deg,#102f5e,#2563eb);color:#fff;border-radius:24px;padding:42px;margin-bottom:26px}.hero h1{font-size:42px;margin:0 0 10px}.hero p{max-width:700px;color:#dbeafe}.hero .actions{display:flex;gap:10px;margin-top:20px}.btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 14px;font-weight:800}.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}.btn.danger{color:var(--red);border-color:#fecaca}.btn.success{color:#047857;border-color:#a7f3d0;background:#ecfdf5}.btn.small{padding:7px 10px;font-size:13px}
+.sectionhead{display:flex;justify-content:space-between;align-items:center;margin:25px 0 13px}.sectionhead h2{margin:0}.cats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.cat{padding:18px 10px;border:1px solid var(--line);background:#fff;border-radius:14px;text-align:center;font-weight:800}
+.cat{gap:8px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.catIcon{font-size:30px;line-height:1;display:block;filter:saturate(1.05)}
+.cat span:last-child{line-height:1.15}
+.cat:hover{border-color:#93c5fd;color:var(--blue)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;min-width:0}.cardimg{height:235px;background:#eef2f7;position:relative}.cardimg img{width:100%;height:100%;object-fit:cover}.heart{position:absolute;right:10px;top:10px;border:0;background:#fff;border-radius:50%;width:38px;height:38px;font-size:20px}.photo-count{position:absolute;bottom:9px;right:9px;background:#111827dd;color:#fff;border-radius:999px;padding:4px 8px;font-size:12px}.cardbody{padding:13px}.card h3{margin:0 0 5px;font-size:16px}.desc{color:var(--muted);font-size:13px;min-height:34px}.price{font-size:21px;font-weight:900;margin:10px 0}.old{color:#94a3b8;text-decoration:line-through;font-size:13px;margin-left:5px}.shopline{font-size:12px;color:var(--muted);margin-bottom:10px}.linkbtn{border:0;background:none;padding:0;color:#155eef;font:inherit;font-weight:700;cursor:pointer;text-decoration:underline}.linkbtn:hover{text-decoration:none}.cardactions{display:flex;gap:8px}.cardactions>*{flex:1}
+.empty{padding:50px;text-align:center;background:#fff;border:1px dashed #cbd5e1;border-radius:16px;color:var(--muted)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px}.filters input,.filters select,.form input,.form select,.form textarea{border:1px solid #cbd5e1;border-radius:10px;padding:11px;background:#fff;outline:0;width:100%}.filters input{max-width:330px}.filters select{max-width:190px}
+.modal{position:fixed;inset:0;background:#0008;z-index:100;display:none;align-items:center;justify-content:center;padding:18px}.modal.open{display:flex}.panel{background:#fff;border-radius:18px;width:min(980px,100%);max-height:94vh;overflow:auto;box-shadow:0 30px 80px #0005}.panel.narrow{width:min(520px,100%)}.panelhead{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;padding:17px 20px;z-index:2}.panelhead h2{margin:0}.close{border:0;background:#f1f5f9;border-radius:10px;width:36px;height:36px}.panelbody{padding:20px}.form{display:grid;gap:11px}.imagePreview{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.seller-onboarding{max-width:620px;margin:20px auto;padding:25px;border:1px solid var(--line);border-radius:18px;background:#fff;text-align:center}.onboard-icon{font-size:48px;margin-bottom:8px}.seller-onboarding .form{text-align:left;margin-top:18px}.loading{text-align:center;padding:30px;color:#64748b}.seller-onboarding .btn{width:100%}.media-editor{display:grid;grid-template-columns:1fr 1.6fr;gap:14px;margin-top:4px}.media-box{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}.media-box h3{margin:0 0 4px}.shop-media-preview{height:150px;border:1px dashed #cbd5e1;border-radius:12px;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden;margin:10px 0;color:#64748b}.shop-media-preview img{width:100%;height:100%;object-fit:contain}.shop-cover-preview{height:150px;border:1px dashed #cbd5e1;border-radius:12px;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden;margin:10px 0;color:#64748b}.shop-cover-preview img{width:100%;height:100%;object-fit:cover}@media(max-width:760px){.media-editor{grid-template-columns:1fr}}.imagePreview img{width:86px;height:86px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}.muted{color:#64748b;font-size:12px}.help{cursor:help;color:#2563eb}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.notice{background:#eff6ff;border:1px solid #bfdbfe;padding:12px;border-radius:12px;color:#1e40af}.error{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:12px;border-radius:12px}.successmsg{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;padding:12px;border-radius:12px}
+.tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px}.tab{border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 12px;font-weight:700}.tab.active{background:#dbeafe;color:#1d4ed8;border-color:#93c5fd}
+.detail{display:grid;grid-template-columns:1fr 1fr;gap:24px}.gallery{background:#f1f5f9;border-radius:14px;overflow:hidden}.gallerymain{height:440px}.gallerymain img{width:100%;height:100%;object-fit:contain}.thumbs{display:flex;gap:7px;padding:8px;overflow:auto}.thumbs img{width:70px;height:70px;object-fit:cover;border-radius:8px;border:2px solid transparent;cursor:pointer}.thumbs img.active{border-color:var(--blue)}
+.stars{color:#f59e0b}.timeline{display:flex;justify-content:space-between;gap:5px;margin:18px 0}.step{flex:1;text-align:center;font-size:11px;color:#94a3b8}.step i{display:block;width:26px;height:26px;border-radius:50%;background:#e2e8f0;margin:0 auto 5px}.step.done{color:#166534}.step.done i{background:#22c55e}
+.order{border:1px solid var(--line);border-radius:14px;background:#fff;margin-bottom:12px;padding:15px} .bankLogo{width:46px;height:46px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:#eef4ff;border:1px solid #dbe5f5;font-weight:900;font-size:12px;flex:0 0 46px} .orderhead{display:flex;justify-content:space-between;gap:12px}.status{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:34px;min-width:92px;border-radius:999px;padding:7px 13px;font-size:12px;line-height:1;font-weight:800;background:#f1f5f9;text-align:center;vertical-align:middle;white-space:nowrap}.status.paid,.status.completed,.status.delivered{background:#dcfce7;color:#166534}.status.shipped{background:#dbeafe;color:#1d4ed8}.status.pending{background:#fef3c7;color:#92400e}.status.cancelled{background:#fee2e2;color:#991b1b}
+.sellergrid{display:grid;grid-template-columns:210px 1fr;gap:18px}.side{border:1px solid var(--line);border-radius:14px;padding:8px;background:#fff;height:max-content}.side button{display:block;width:100%;text-align:left;border:0;background:#fff;border-radius:9px;padding:11px;font-weight:800}.side button.active,.side button:hover{background:#eff6ff;color:#2563eb}.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{padding:15px;border:1px solid var(--line);border-radius:13px;background:#fff}.stat b{font-size:24px;display:block}
+.tablewrap{overflow:auto}.table{width:100%;border-collapse:collapse;background:#fff}.table th,.table td{padding:11px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}.table th{background:#f8fafc}
+.cartrow{display:grid;grid-template-columns:70px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.cartrow img{width:70px;height:70px;object-fit:cover;border-radius:9px}.qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:9px;overflow:hidden}.qty button{border:0;background:#f8fafc;padding:6px 10px}.qty span{padding:0 10px}
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);z-index:200;background:#0f172a;color:#fff;padding:12px 17px;border-radius:11px;display:none}.toast.show{display:block}
+footer{background:#0b1220;color:#cbd5e1;margin-top:50px;padding:35px 18px}.foot{max-width:1240px;margin:auto;display:grid;grid-template-columns:2fr 1fr 1fr;gap:20px} .footlink{display:block;background:none;border:0;padding:2px 0;color:inherit;text-align:left;font:inherit;cursor:pointer}.footlink:hover{text-decoration:underline}
+
+.report-table{width:100%;border-collapse:collapse;font-size:13px;background:#fff}.report-table th,.report-table td{border:1px solid #dbe3ef;padding:9px;text-align:left;vertical-align:top}.report-table th{background:#eff6ff}.tablewrap{overflow:auto;border:1px solid #dbe3ef;border-radius:12px}
+@media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr)}.cats{grid-template-columns:repeat(3,1fr)}.detail{grid-template-columns:1fr}.sellergrid{grid-template-columns:1fr}.statgrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.nav{flex-wrap:wrap}.search{order:3;flex-basis:100%}.grid{grid-template-columns:repeat(2,1fr)}.cats{grid-template-columns:repeat(2,1fr)}.hero h1{font-size:31px}.formgrid{grid-template-columns:1fr}.foot{grid-template-columns:1fr}.cardimg{height:180px}}
+
+.shop-page{padding-bottom:40px}
+.shop-back{margin:12px 0 18px}
+.shop-hero{border:1px solid var(--border,#d9e1ee);border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 8px 30px rgba(20,40,80,.07)}
+.shop-cover{height:210px;background:linear-gradient(135deg,#12386d,#2d65e8);overflow:hidden}
+.shop-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.shop-head{display:flex;gap:18px;align-items:center;padding:18px 22px 22px}
+.shop-logo{width:88px;height:88px;border-radius:18px;background:#eef3fb;border:4px solid #fff;box-shadow:0 3px 14px rgba(0,0,0,.12);overflow:hidden;display:flex;align-items:center;justify-content:center;flex:none;font-size:32px;font-weight:800}
+.shop-logo img{width:100%;height:100%;object-fit:cover}
+.shop-head h1{margin:0 0 5px;font-size:28px}.shop-head p{margin:0 0 8px;color:#5d6b82}.shop-search{display:flex;gap:10px;margin:22px 0}.shop-search input{flex:1;border:1px solid #cbd6e6;border-radius:12px;padding:14px;font-size:15px}.shopcats{margin-bottom:22px}.shopcat{cursor:pointer;min-height:100px}.shopcat.active{border-color:#2864e8;box-shadow:0 0 0 2px rgba(40,100,232,.12)}.shopcat .caticon{font-size:32px;display:block;margin-bottom:7px}.muted{color:#68758a;font-size:14px}.search-results{margin:14px 0 22px}.search-results h3{margin:0 0 10px}.search-shops{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}.search-shop{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #d9e1ee;border-radius:12px;background:#fff;cursor:pointer;text-align:left}.search-shop:hover{border-color:#2864e8;box-shadow:0 3px 12px rgba(20,50,100,.08)}.search-shop img{width:46px;height:46px;border-radius:10px;object-fit:cover;background:#eef3fb}.search-shop .initial{width:46px;height:46px;border-radius:10px;background:#eef3fb;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#1755d1}.search-status{color:#68758a;font-size:13px;margin:6px 0 12px}@media(max-width:650px){.search-shops{grid-template-columns:1fr}}
+@media(max-width:650px){.shop-cover{height:150px}.shop-head{padding:15px}.shop-logo{width:68px;height:68px}.shop-head h1{font-size:22px}.shop-search{flex-direction:column}}
+
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9999;max-width:min(92vw,620px);padding:12px 16px;border-radius:12px;background:#0b1730;color:#fff;box-shadow:0 12px 35px rgba(0,0,0,.22);font-weight:700;text-align:center;line-height:1.35}.toast.show{display:block}.danger-outline{border:1px solid #ef4444!important;color:#dc2626!important;background:#fff!important}.seller-layout{display:grid;grid-template-columns:180px minmax(0,1fr);gap:18px}.seller-sidebar{position:sticky;top:0;align-self:start;display:flex;flex-direction:column;gap:8px}.seller-nav{width:100%;text-align:left;padding:11px 12px;border:1px solid #d9e1ee;border-radius:10px;background:#fff;cursor:pointer;font-weight:700}.seller-nav.active{background:#eef4ff;border-color:#2864e8;color:#1755d1}.seller-nav.danger{color:#dc2626}.seller-main{min-width:0}.report-table{width:100%;border-collapse:collapse}.report-table th,.report-table td{padding:9px;border-bottom:1px solid #e4eaf2;text-align:left;vertical-align:top}.report-table th{background:#f7f9fc}.tablewrap{overflow:auto;border:1px solid #d9e1ee;border-radius:12px}@media(max-width:760px){.seller-layout{grid-template-columns:1fr}.seller-sidebar{position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.seller-nav{text-align:center}.seller-main h2{font-size:24px}.panel{width:min(96vw,1100px)}}
+
+/* Shopora seller cover — wider professional layout */
+.seller-cover,.shop-cover,.media-cover-preview,#shopCoverPreview{
+ width:100%;
+ min-height:260px;
+ aspect-ratio:16/5;
+ max-height:380px;
+ overflow:hidden;
+ border-radius:18px;
+}
+.seller-cover img,.shop-cover img,.media-cover-preview img,#shopCoverPreview img{
+ width:100%;
+ height:100%;
+ min-height:260px;
+ object-fit:cover;
+ display:block;
+}
+@media(max-width:700px){
+ .seller-cover,.shop-cover,.media-cover-preview,#shopCoverPreview{
+  min-height:190px;
+  aspect-ratio:16/7;
+ }
+ .seller-cover img,.shop-cover img,.media-cover-preview img,#shopCoverPreview img{
+  min-height:190px;
+ }
+}
+
+
+/* Shopora final UI polish */
+.notice{background:#f4f8ff;border:1px solid #d7e5ff;border-radius:16px;padding:14px 16px;color:#244a92;box-shadow:0 3px 12px rgba(30,64,175,.04)}
+.seller-shell-title{display:flex;align-items:center;gap:12px;margin:0 0 18px;padding:14px 16px;border:1px solid #dbe5f5;border-radius:18px;background:linear-gradient(135deg,#f8fbff,#eef4ff)}
+.seller-shell-title .mark{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#12386d,#2563eb);color:#fff;display:flex;align-items:center;justify-content:center;font-size:23px;box-shadow:0 8px 18px rgba(37,99,235,.22)}
+.seller-shell-title h2{margin:0;font-size:25px}.seller-shell-title p{margin:3px 0 0;color:#64748b;font-size:13px}
+.seller-layout{grid-template-columns:190px minmax(0,1fr)}
+.seller-main{background:#fff;border:1px solid #dce5f2;border-radius:20px;padding:20px;box-shadow:0 8px 28px rgba(15,23,42,.05)}
+.seller-sidebar{background:#fff;border:1px solid #dce5f2;border-radius:20px;padding:10px;box-shadow:0 8px 28px rgba(15,23,42,.04)}
+.seller-nav{border-color:#e2e8f0;border-radius:12px}.seller-nav.active{box-shadow:0 3px 10px rgba(37,99,235,.08)}
+.shop-cover{height:290px;min-height:0;aspect-ratio:auto;border-radius:22px 22px 0 0}.shop-cover img{object-position:center center}
+.shop-head{padding:22px 26px 26px}.shop-hero{border-radius:22px}.shop-head h1{font-size:32px}
+.shop-search{background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:10px}.shop-search input{border:0;background:transparent}.shop-search .btn{white-space:nowrap}
+.report-card{border:1px solid #dbe5f1;border-radius:20px;background:#fff;padding:18px;box-shadow:0 8px 28px rgba(15,23,42,.04)}
+.report-table th{background:#f4f7fb;font-size:12px;color:#475569}.report-table td{font-size:13px}.report-table tbody tr:hover{background:#fafcff}
+.report-table .num{text-align:right;font-variant-numeric:tabular-nums}
+.bank-method{display:flex;align-items:center;gap:14px;padding:15px;border:1px solid #dce5f2;border-radius:16px;background:#fff;margin-bottom:10px}.bank-logo{width:54px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;letter-spacing:.4px;background:#0b2d6b;color:#fff;border:1px solid #163f88;box-shadow:0 4px 10px rgba(15,55,110,.12)}
+.bank-logo.mau{background:#f2c400;color:#111}.bank-logo.mcb{background:#0050a4}.bank-logo.custom{background:#334155}.bank-method-main{min-width:0;flex:1}.bank-method-main b{display:block}.bank-method-main small{display:block;color:#64748b;margin-top:3px}.payment-panel{border:1px solid #dbe5f2;border-radius:20px;padding:18px;background:#fbfdff}.payment-panel h3{margin:0 0 8px}.payment-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.payment-grid .field{padding:12px;border:1px solid #e2e8f0;border-radius:12px;background:#fff}.payment-grid .field small{display:block;color:#64748b;margin-bottom:4px}.payment-grid .field b{word-break:break-word}
+.order-card{border:1px solid #dbe5f2;border-radius:20px;background:#fff;padding:17px;margin-bottom:14px;box-shadow:0 6px 22px rgba(15,23,42,.04)}.order-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.order-meta{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}.meta-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border-radius:999px;background:#f8fafc;border:1px solid #e2e8f0;font-size:12px;color:#475569}.order-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.wa-btn{text-decoration:none!important;display:inline-flex;align-items:center;gap:7px}.wa-icon{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#25d366;color:#fff;font-size:12px;font-weight:900}
+.reset-page{min-height:100vh;background:linear-gradient(135deg,#eef4ff,#f8fafc);display:flex;align-items:center;justify-content:center;padding:24px}.reset-card{width:min(500px,100%);background:#fff;border:1px solid #dbe5f2;border-radius:24px;padding:28px;box-shadow:0 20px 60px rgba(15,23,42,.12)}.reset-card h1{margin:0 0 8px}.reset-card p{color:#64748b}.reset-card .btn{width:100%}
+.product-actions{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 18px}.category-picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}.category-picker .cat{min-height:120px}.product-picker{display:grid;gap:10px}.product-pick{display:flex;align-items:center;gap:12px;border:1px solid #dbe5f2;border-radius:14px;padding:12px;background:#fff}.product-pick img{width:62px;height:62px;border-radius:10px;object-fit:cover;background:#f1f5f9}.product-pick-main{flex:1;min-width:0}.product-pick-main b{display:block}.product-searchbar{display:flex;gap:9px;margin:12px 0}.product-searchbar input{flex:1;border:1px solid #cbd5e1;border-radius:11px;padding:11px}
+.message-list{display:grid;gap:10px;max-height:55vh;overflow:auto}.message-row{padding:12px;border:1px solid #e2e8f0;border-radius:14px;background:#fff}.message-row.mine{background:#eff6ff}.message-row small{color:#64748b}.message-actions{margin-top:7px}.review-box{border:1px solid #dbe5f2;border-radius:16px;padding:15px;background:#fff}.complaint-box{border:1px solid #fde2e2;border-radius:16px;padding:15px;background:#fff}
+@media(max-width:760px){.payment-grid{grid-template-columns:1fr}.seller-main{padding:14px}.shop-cover{height:210px}.shop-head{padding:18px}.shop-head h1{font-size:26px}.order-top{flex-direction:column}.report-card{padding:12px}}
+
+
+/* Shopora final panel containment + curved scrollbar polish */
+html{box-sizing:border-box}
+*,*::before,*::after{box-sizing:inherit}
+.panel{
+  width:min(1100px,calc(100vw - 28px));
+  max-width:calc(100vw - 28px);
+  max-height:94vh;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  border-radius:24px;
+  clip-path:inset(0 round 24px);
+  scrollbar-width:thin;
+  scrollbar-color:#b8c4d6 transparent;
+  scrollbar-gutter:stable;
+}
+.panel::-webkit-scrollbar{width:10px;height:0}
+.panel::-webkit-scrollbar-track{background:transparent;border-radius:999px;margin:10px 0}
+.panel::-webkit-scrollbar-thumb{background:#b8c4d6;border:3px solid #fff;border-radius:999px;min-height:42px}
+.panel::-webkit-scrollbar-thumb:hover{background:#8fa0b8}
+.panel::-webkit-scrollbar-corner{background:transparent}
+.panelbody{min-width:0;max-width:100%;overflow-x:hidden}
+.panelbody>*{max-width:100%;min-width:0}
+.panelbody input,.panelbody textarea,.panelbody select,.panelbody button{max-width:100%;box-sizing:border-box}
+.seller-layout,.seller-main,.seller-sidebar,.seller-shell-title,.media-editor,.media-box,.payment-panel,.report-card,.tablewrap{min-width:0;max-width:100%}
+.seller-layout{grid-template-columns:minmax(170px,190px) minmax(0,1fr);align-items:start}
+.seller-main{overflow-x:hidden;overflow-wrap:anywhere}
+.seller-sidebar{overflow:hidden}
+.media-editor{grid-template-columns:minmax(145px,220px) minmax(0,1fr);width:100%;align-items:start}
+.media-box{overflow:hidden}
+.shop-media-preview,.shop-cover-preview{width:100%;max-width:100%;overflow:hidden}
+.shop-cover-preview{min-height:180px;height:auto;aspect-ratio:16/5}
+.shop-cover-preview img{width:100%;height:100%;min-width:0;object-fit:cover;display:block}
+.formgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.tablewrap{overflow-x:auto;overflow-y:hidden}
+@media(max-width:760px){
+  .panel{width:calc(100vw - 18px);max-width:calc(100vw - 18px);border-radius:22px;clip-path:inset(0 round 22px)}
+  .seller-layout{grid-template-columns:1fr}
+  .media-editor{grid-template-columns:1fr}
+  .formgrid{grid-template-columns:1fr}
+}
+
+
+/* V3: seller panel full-width containment + no horizontal panel scrolling */
+.modal{padding:8px;overflow:hidden}
+.panel{
+  width:min(1200px,calc(100vw - 16px));
+  max-width:calc(100vw - 16px);
+  max-height:96vh;
+  overflow-x:hidden!important;
+  overflow-y:auto;
+  border-radius:28px;
+  clip-path:inset(0 round 28px);
+  -webkit-clip-path:inset(0 round 28px);
+  scrollbar-width:thin;
+  scrollbar-color:#aebbd0 transparent;
+}
+.panelbody{width:100%;min-width:0;max-width:100%;overflow-x:hidden!important;padding:20px 22px}
+.seller-layout{width:100%;max-width:100%;grid-template-columns:205px minmax(0,1fr);gap:16px}
+.seller-main{width:100%;min-width:0;max-width:100%;overflow-x:hidden!important;overflow-wrap:anywhere}
+.seller-sidebar{width:100%;min-width:0;max-width:100%;overflow:hidden}
+.seller-shell-title{width:100%;min-width:0;max-width:100%;overflow:hidden;border-radius:20px}
+.report-card{width:100%;min-width:0;max-width:100%;overflow:hidden;border-radius:20px}
+.report-table{width:100%!important;max-width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;word-break:break-word}
+.report-table th,.report-table td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word;padding:8px 7px;vertical-align:top}
+.report-table th{font-size:11px;line-height:1.15}
+.report-table td{font-size:11px;line-height:1.25}
+.report-table .num{text-align:right;white-space:nowrap!important;word-break:normal}
+.report-table th:nth-child(1),.report-table td:nth-child(1){width:10%}
+.report-table th:nth-child(2),.report-table td:nth-child(2){width:14%}
+.report-table th:nth-child(3),.report-table td:nth-child(3){width:11%}
+.report-table th:nth-child(4),.report-table td:nth-child(4){width:10%}
+.report-table th:nth-child(5),.report-table td:nth-child(5){width:15%}
+.report-table th:nth-child(6),.report-table td:nth-child(6){width:6%}
+.report-table th:nth-child(7),.report-table td:nth-child(7){width:9%}
+.report-table th:nth-child(8),.report-table td:nth-child(8){width:8%}
+.report-table th:nth-child(9),.report-table td:nth-child(9){width:9%}
+.report-table th:nth-child(10),.report-table td:nth-child(10){width:8%}
+.tablewrap{width:100%;max-width:100%;overflow-x:hidden!important;overflow-y:visible;border:1px solid #dbe5f1;border-radius:16px}
+.tablewrap .table{width:100%;table-layout:fixed}
+.tablewrap .table th,.tablewrap .table td{white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+.shop-cover,.shop-hero,.media-editor,.media-box,.payment-panel,.statgrid,.formgrid{max-width:100%;min-width:0}
+.shop-cover{border-radius:24px}
+.shop-cover-preview{border-radius:18px;overflow:hidden}
+@media(max-width:900px){
+  .seller-layout{grid-template-columns:180px minmax(0,1fr)}
+  .panelbody{padding:16px}
+  .report-table th,.report-table td{padding:7px 5px;font-size:10px}
+}
+@media(max-width:760px){
+  .modal{padding:5px}
+  .panel{width:calc(100vw - 10px);max-width:calc(100vw - 10px);max-height:97vh;border-radius:22px;clip-path:inset(0 round 22px);-webkit-clip-path:inset(0 round 22px)}
+  .panelbody{padding:14px}
+  .seller-layout{grid-template-columns:1fr}
+  .report-table th,.report-table td{font-size:9px;padding:6px 4px}
+}
+
+</style>
+</head>
+<body>
+<div class="top">Shopora • Local marketplace • Buy from local sellers</div>
+<header><div class="nav">
+<div class="logo" onclick="goHome()">Shop<span>ora</span></div>
+<div class="search"><input id="search" placeholder="Search products, categories or shops…" oninput="queueLiveSearch()" onkeydown="if(event.key==='Enter'){event.preventDefault();searchCatalog()}"><button type="button" id="searchBtn" onclick="searchCatalog()">Search</button></div>
+<button class="navbtn" id="accountBtn" onclick="openAccount()">Account</button>
+<button class="navbtn" onclick="openNotifications()">🔔 <span id="notifCount"></span></button>
+<button class="navbtn blue" onclick="openCart()">🛒 <span id="cartCount">0</span></button>
+</div></header>
+
+<main id="app">
+<section class="hero"><h1>Shop smart. Shop local.</h1><p>Discover products from verified local sellers. Track every order, manage returns and shop securely.</p><div class="actions"><button class="btn primary" onclick="document.getElementById('products').scrollIntoView()">Shop now</button><button class="btn" onclick="openSeller()">Become a seller</button></div></section>
+
+<div class="sectionhead"><h2>Categories</h2><button class="btn small" onclick="loadCategories()">Refresh</button></div>
+<div id="categories" class="cats"></div>
+
+<div class="sectionhead"><h2 id="productTitle">Popular products</h2><button class="btn small" onclick="loadCatalog()">Refresh</button></div>
+<div id="searchResults" class="search-results" hidden></div>
+<div class="filters"><input id="minPrice" type="number" placeholder="Min MUR"><input id="maxPrice" type="number" placeholder="Max MUR"><select id="sort"><option value="newest">Newest</option><option value="popular">Popular</option><option value="rating">Top rated</option><option value="price_asc">Price low → high</option><option value="price_desc">Price high → low</option></select><button class="btn primary" onclick="loadCatalog()">Apply</button></div>
+<section id="products" class="grid"></section>
+</main>
+
+<footer><div class="foot"><div><h2>Shopora</h2><p id="footerDescription">A local marketplace built for customers.</p></div><div id="customerFooter"><b>Customers</b><p><button class="footlink" onclick="openOrders()">Orders</button><button class="footlink" onclick="openAccount()">Wishlist</button><button class="footlink" onclick="manageAddresses()">Addresses</button><button class="footlink" onclick="openOrders()">Returns</button></p></div><div id="sellerFooter" hidden><b>Sellers</b><p><button class="footlink" onclick="openSeller()">Seller Centre</button><button class="footlink" onclick="openSellerTab('products')">Products</button><button class="footlink" onclick="openSellerTab('orders')">Orders</button><button class="footlink" onclick="openSellerTab('payments')">Payments</button></p></div></div></footer>
+
+<!-- Account -->
+<div id="account" class="modal"><div class="panel narrow"><div class="panelhead"><h2>Account</h2><button class="close" onclick="closeModal('account')">×</button></div><div class="panelbody" id="accountBody"></div></div></div>
+
+<!-- Auth -->
+<div id="auth" class="modal"><div class="panel narrow"><div class="panelhead"><h2 id="authTitle">Create account</h2><button class="close" onclick="closeModal('auth')">×</button></div><div class="panelbody" id="authBody"></div></div></div>
+
+<!-- Product -->
+<div id="productModal" class="modal"><div class="panel"><div class="panelhead"><h2>Product details</h2><button class="close" onclick="closeModal('productModal')">×</button></div><div class="panelbody" id="productBody"></div></div></div>
+
+<!-- Cart -->
+<div id="cart" class="modal"><div class="panel narrow"><div class="panelhead"><h2>Shopping cart</h2><button class="close" onclick="closeModal('cart')">×</button></div><div class="panelbody" id="cartBody"></div></div></div>
+
+<!-- Orders -->
+<div id="orders" class="modal"><div class="panel"><div class="panelhead"><h2>My Orders</h2><button class="close" onclick="closeModal('orders')">×</button></div><div class="panelbody" id="ordersBody"></div></div></div>
+
+<!-- Notifications -->
+<div id="notifications" class="modal"><div class="panel narrow"><div class="panelhead"><h2>Notifications</h2><button class="close" onclick="closeModal('notifications')">×</button></div><div class="panelbody" id="notificationsBody"></div></div></div>
+
+<!-- Seller -->
+<div id="seller" class="modal"><div class="panel"><div class="panelhead"><h2>Seller Centre</h2><button class="close" onclick="closeModal('seller')">×</button></div><div class="panelbody" id="sellerBody"></div></div></div>
+
+<!-- Checkout -->
+<div id="checkout" class="modal"><div class="panel"><div class="panelhead"><h2>Secure checkout</h2><button class="close" onclick="closeModal('checkout')">×</button></div><div class="panelbody" id="checkoutBody"></div></div></div>
+<div id="resetPage" hidden></div><div id="toast" class="toast"></div>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="config.js"></script>
+<script>
+const cfg=window.SHOPORA_CONFIG||{};
+const sb=supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_PUBLISHABLE_KEY);
+const SITE_URL=cfg.SITE_URL||location.origin+'/';
+const RESET_REDIRECT_URL=cfg.RESET_REDIRECT_URL||(SITE_URL.replace(/\/$/,'')+'/reset-password');
+function recoveryRedirect(){return RESET_REDIRECT_URL}
+async function handleRecoveryRoute(){
+  const hash=location.hash||'';
+  const isRecovery=location.pathname==='/reset-password'||hash.includes('type=recovery')||hash.includes('reset-password');
+  if(!isRecovery)return;
+  document.querySelectorAll('.modal').forEach(x=>x.classList.remove('open'));
+  const root=$('resetPage'); if(!root)return;
+  root.hidden=false;
+  root.innerHTML=`<section class="reset-page"><div class="reset-card"><div class="mark" style="font-size:32px">🔐</div><h1>Reset your password</h1><p>Choose a new password for your Shopora account. Your old password will stop working after the change.</p><form class="form" onsubmit="finishPasswordReset(event)"><input id="newPassword" type="password" minlength="12" placeholder="New password (12+ characters)" required><input id="newPassword2" type="password" minlength="12" placeholder="Confirm new password" required><button class="btn primary" id="resetBtn">Set new password</button><div id="resetMsg"></div></form></div></section>`;
+  try{
+    const {data}=await sb.auth.getSession();
+    if(!data?.session){ $('resetMsg').innerHTML='<div class="error">This reset link is invalid or has expired. Request a new password-reset email.</div>'; }
+  }catch(e){ $('resetMsg').innerHTML=`<div class="error">${esc(e.message||'Could not validate reset link.')}</div>`; }
+}
+async function finishPasswordReset(e){
+ e.preventDefault();
+ const a=$('newPassword').value,b=$('newPassword2').value,msg=$('resetMsg'),btn=$('resetBtn');
+ if(a!==b){msg.innerHTML='<div class="error">Passwords do not match.</div>';return}
+ if(a.length<12||!/[a-z]/.test(a)||!/[A-Z]/.test(a)||!/[0-9]/.test(a)||!/[^A-Za-z0-9]/.test(a)){msg.innerHTML='<div class="error">Use at least 12 characters with uppercase, lowercase, a number and a symbol.</div>';return}
+ btn.disabled=true;btn.textContent='Updating…';
+ try{
+   const {error}=await sb.auth.updateUser({password:a});
+   if(error)throw error;
+   await sb.auth.signOut();
+   msg.innerHTML='<div class="successmsg"><b>Password changed successfully.</b><br>You can now log in with your new password.</div><button class="btn primary" style="margin-top:10px" onclick="location.href=SITE_URL">Go to Shopora</button>';
+   history.replaceState(null,'',location.pathname+location.search);
+ }catch(err){msg.innerHTML=`<div class="error">${esc(err.message||'Could not change password.')}</div>`;btn.disabled=false;btn.textContent='Set new password'}
+}
+
+let session=null,currentUser=null,currentProfile=null,categories=[],catalog=[],activeCategory=null,currentProduct=null,shopPage=null,shopCatalog=[],homeMarkup=null;
+
+const MAURITIUS_BANKS=[
+ {id:'mcb',name:'MCB',logo:'🏦'},
+ {id:'sbm',name:'SBM Bank',logo:'🏦'},
+ {id:'absa',name:'Absa Bank Mauritius',logo:'🏦'},
+ {id:'afrasiabank',name:'AfrAsia Bank',logo:'🏦'},
+ {id:'bankone',name:'Bank One',logo:'🏦'},
+ {id:'maubank',name:'MauBank',logo:'🏦'},
+ {id:'hsbc',name:'HSBC Mauritius',logo:'🏦'},
+ {id:'standardbank',name:'Standard Bank Mauritius',logo:'🏦'}
+];
+let cart=JSON.parse(localStorage.getItem('shopora_cart')||'[]'),sellerTab='dashboard',sellerOrders=[],sellerProducts=[],shopData=null,addresses=[],isSeller=false;
+const $=id=>document.getElementById(id);
+if(!homeMarkup && $('app'))homeMarkup=$('app').innerHTML;
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const money=n=>'MUR '+Number(n||0).toLocaleString('en-MU',{maximumFractionDigits:2});
+function whatsappUrl(phone){const d=String(phone||'').replace(/\D/g,'');return d?`https://wa.me/${d}`:''}
+function whatsappButton(phone){const u=whatsappUrl(phone);return u?`<a class="btn small wa-btn" href="${u}" target="_blank" rel="noopener noreferrer"><span class="wa-icon">☎</span> WhatsApp</a>`:''}
+function toast(s){const t=$('toast');if(!t)return;t.textContent=s;t.classList.add('show');clearTimeout(window.__shoporaToastTimer);window.__shoporaToastTimer=setTimeout(()=>t.classList.remove('show'),3600)}
+function openModal(id){$(id).classList.add('open')}
+let pageMode='customer';
+function setPageMode(mode){
+ pageMode=mode==='seller'?'seller':'customer';
+ let cf=$('customerFooter'),sf=$('sellerFooter'),d=$('footerDescription');
+ if(cf)cf.hidden=pageMode!=='customer';
+ if(sf)sf.hidden=pageMode!=='seller';
+ if(d)d.textContent=pageMode==='seller'?'Manage your Shopora store and customer orders.':'A local marketplace built for customers.';
+}
+async function openSellerTab(tab){
+ if(!currentUser){openAuth('login');return}
+ if(!isSeller){
+   await openSeller();
+   if(!isSeller)return;
+ }
+ sellerTab=tab||'dashboard';
+ setPageMode('seller');
+ renderSeller();
+ openModal('seller');
+}
+function closeModal(id){$(id).classList.remove('open');if(id==='seller')setPageMode('customer')}
+function closeAll(){document.querySelectorAll('.modal').forEach(x=>x.classList.remove('open'));setPageMode('customer')}
+function goHome(){
+ setPageMode('customer');closeAll();shopPage=null;shopCatalog=[];activeCategory=null;
+ if(homeMarkup && $('app'))$('app').innerHTML=homeMarkup;
+ if($('search'))$('search').value='';
+ if($('productTitle'))$('productTitle').textContent='Popular products';
+ window.scrollTo({top:0,behavior:'smooth'});
+ loadCategories().then(()=>loadCatalog()).catch(()=>loadCatalog());
+}
+function avatar(url,name=''){return url?`<img class="avatar" src="${esc(url)}">`:`<span class="avatar" style="display:inline-flex;align-items:center;justify-content:center">${esc((name||'U')[0].toUpperCase())}</span>`}
+async function setAuthUser(u){
+ session=u;currentUser=u?.user||u;currentProfile=null;updateNav();
+ if(currentUser){
+   const {data}=await sb.from('profiles').select('id,full_name,phone,avatar_url').eq('id',currentUser.id).maybeSingle();
+   if(data && currentUser?.id===data.id){
+     currentProfile=data;
+     currentUser.user_metadata={...currentUser.user_metadata,full_name:data.full_name,avatar_url:data.avatar_url};
+     updateNav();
+   }
+   const {data:ownedShop}=await sb.from('shops').select('id,name,slug,active,logo_url,cover_url').eq('owner_id',currentUser.id).maybeSingle();
+   isSeller=!!ownedShop;
+   if(ownedShop)shopData=ownedShop;
+   updateNav();
+   loadNotifications();
+ }else{
+   isSeller=false;
+   shopData=null;
+ }
+}
+function isShoporaSuperAdmin(){
+ return !!(currentUser && String(currentUser.email||'').toLowerCase()==='ludovicperrine@icloud.com');
+}
+function openSuperAdmin(){
+ if(!isShoporaSuperAdmin()){toast('Super Admin access denied');return}
+ window.location.href='admin/';
+}
+
+function updateNav(){
+ let name=currentProfile?.full_name||currentUser?.user_metadata?.full_name||currentUser?.email?.split('@')[0]||'Account';
+ let pic=currentProfile?.avatar_url||currentUser?.user_metadata?.avatar_url||null;
+ $('accountBtn').innerHTML=currentUser?`${avatar(pic,name)}${esc(name)}`:'Account';
+}
+function cartKey(){return JSON.stringify(cart.map(x=>[x.product_id,x.quantity]))}
+function saveCart(){localStorage.setItem('shopora_cart',JSON.stringify(cart));$('cartCount').textContent=cart.reduce((a,x)=>a+x.quantity,0)}
+function addCart(p){if(!currentUser){openAuth('login');return}if(p.stock<=0){toast('This product is out of stock');return}let x=cart.find(x=>x.product_id===p.id);if(x)x.quantity=Math.min(x.quantity+1,p.stock);else cart.push({product_id:p.id,shop_id:p.shop_id,name:p.name,price:Number(p.price),quantity:1,image_url:p.image_url,stock:p.stock});saveCart();toast('Added to cart')}
+function removeCart(id){cart=cart.filter(x=>x.product_id!==id);saveCart();renderCart()}
+function changeQty(id,d){let x=cart.find(x=>x.product_id===id);if(!x)return;x.quantity+=d;if(x.quantity<=0)removeCart(id);else{x.quantity=Math.min(x.quantity,x.stock);saveCart();renderCart()}}
+function openCart(){if(!currentUser){openAuth('login');return}renderCart();openModal('cart')}
+async function loadCategories(){
+  const el=$('categories');
+  if(!el)return false;
+  try{
+    const {data,error}=await sb.from('categories').select('*').eq('active',true).order('sort_order');
+    if(error)throw error;
+    categories=data||[];
+    const categoryIcons={
+      'Electronics':'📱','Phones & Accessories':'📱','Computers':'💻','Gaming':'🎮',
+      'Motorcycles & Accessories':'🏍️','Cars & Accessories':'🚗','Fashion - Men':'👔',
+      'Fashion - Women':'👗','Shoes':'👟','Beauty & Personal Care':'💄','Home & Living':'🏠',
+      'Kitchen':'🍳','Sports & Fitness':'⚽','Baby & Kids':'🧸','Toys':'🧸',
+      'Food & Grocery':'🛒','Books & Stationery':'📚','Tools & Hardware':'🔧',
+      'Services':'🛠️','Other':'🛍️'
+    };
+    el.innerHTML=categories.map(c=>`<button class="cat" onclick="chooseCategory('${c.id}','${esc(c.name)}')"><span class="catIcon">${categoryIcons[c.name]||'🛍️'}</span><span>${esc(c.name)}</span></button>`).join('');
+    return true;
+  }catch(e){
+    console.error('loadCategories failed',e);
+    el.innerHTML=`<div class="error" style="grid-column:1/-1"><b>Categories could not be loaded.</b><br>${esc(e?.message||'Database error')}</div>`;
+    return false;
+  }
+};
+function chooseCategory(id,name){
+ // This is the global marketplace category selector, not a shop category.
+ shopPage=null;
+ activeCategory=id;
+ $('productTitle').textContent=name;
+ loadCatalog();
+}
+
+function openSellerStore(id){
+ if(!id){toast('Store unavailable');return}
+ openShopById(id);
+}
+async function openShopById(id){
+ try{
+   const {data,error}=await sb.rpc('get_shopora_shop',{p_shop:id});
+   if(error)throw error;
+   const shop=data?.shop;
+   if(!shop){toast('This store is unavailable');return}
+   await openShopPage(shop);
+ }catch(e){toast(e?.message||'Could not open store')}
+}
+function shopCategoryIcon(name){
+ const n=String(name||'').toLowerCase();
+ const icons=[
+  ['electronics','📱'],['phones','📱'],['computer','💻'],['gaming','🎮'],
+  ['motorcycle','🏍️'],['car','🚗'],['fashion - men','👔'],['fashion - women','👗'],
+  ['shoe','👟'],['beauty','💄'],['home','🏠'],['kitchen','🍳'],['sport','⚽'],
+  ['baby','🧸'],['toy','🧸'],['food','🛒'],['grocery','🛒'],['book','📚'],
+  ['stationery','📚'],['tool','🔧'],['service','🛠️']
+ ];
+ const hit=icons.find(([k])=>n.includes(k)); return hit?hit[1]:'📦';
+}
+function renderShopProducts(items){
+ const el=$('shopProducts'); if(!el)return;
+ if(!items.length){el.innerHTML='<div class="empty">No products found in this shop.</div>';return}
+ el.innerHTML=items.map(p=>`<article class="card">
+  <div class="cardimg"><img src="${esc(p.image_url||'')}" alt="${esc(p.name)}" onerror="this.style.display='none'">${p.image_count>1?`<span class="photo-count">▣ ${p.image_count}</span>`:''}</div>
+  <div class="cardbody"><h3>${esc(p.name)}</h3><div class="desc">${esc(p.description||'')}</div>
+  <div class="price">${money(p.price)} ${p.compare_price?`<span class="old">${money(p.compare_price)}</span>`:''}</div>
+  <div class="shopline">Stock: ${Number(p.stock||0)} · ⭐ ${Number(p.rating||0).toFixed(1)}</div>
+  <div class="cardactions"><button class="btn" onclick="viewProduct('${p.id}')">View</button><button class="btn primary" onclick='addCart(${JSON.stringify(p).replace(/'/g,"&#39;")})'>Add to cart</button></div></div>
+ </article>`).join('');
+}
+function renderShopPageCategories(){
+ const el=$('shopCategories'); if(!el)return;
+ // STORE PAGE: show ONLY categories for which this store currently has
+ // available/catalogued products. The home page uses loadCategories() and
+ // therefore continues to show every marketplace category.
+ const seen=new Map();
+ shopCatalog.forEach(p=>{
+   if(p.category_id && p.category_name && Number(p.stock||0)>0)
+     seen.set(p.category_id,p.category_name);
+ });
+ const cats=[...seen.entries()];
+ el.innerHTML=cats.length
+   ? cats.map(([id,name])=>`<button class="cat shopcat" onclick="filterShopCategory('${id}',this)">
+       <span class="caticon">${shopCategoryIcon(name)}</span><b>${esc(name)}</b>
+     </button>`).join('')
+   : '<div class="empty">This store has no available categories yet.</div>';
+}
+function filterShopCategory(id,btn){
+ document.querySelectorAll('.shopcat').forEach(x=>x.classList.remove('active'));
+ if(btn)btn.classList.add('active');
+ const q=($('shopSearch')?.value||'').trim().toLowerCase();
+ let items=shopCatalog.filter(p=>p.category_id===id);
+ if(q)items=items.filter(p=>String(p.name||'').toLowerCase().includes(q)||String(p.description||'').toLowerCase().includes(q)||String(p.brand||'').toLowerCase().includes(q));
+ $('shopProductTitle').textContent=`${items.length} product${items.length===1?'':'s'} in ${document.querySelector('.shopcat.active b')?.textContent||'category'}`;
+ renderShopProducts(items);
+}
+function searchInsideShop(){
+ const q=($('shopSearch')?.value||'').trim().toLowerCase();
+ document.querySelectorAll('.shopcat').forEach(x=>x.classList.remove('active'));
+ let items=shopCatalog;
+ if(q)items=items.filter(p=>String(p.name||'').toLowerCase().includes(q)||String(p.description||'').toLowerCase().includes(q)||String(p.brand||'').toLowerCase().includes(q));
+ $('shopProductTitle').textContent=q?`Search results for "${esc(q)}"`:`All products in ${esc(shopPage?.name||'this shop')}`;
+ renderShopProducts(items);
+}
+async function openShopPage(shop){
+ shopPage=shop;activeCategory=null;
+ let shopObject=shop;
+ try{
+   const r=await sb.rpc('get_shopora_shop',{p_shop:shopObject.id});
+   if(!r.error && r.data?.shop){shopObject=r.data.shop;shopCatalog=r.data.products||[]}
+   else{
+     const r2=await sb.rpc('get_shopora_catalog',{p_search:'',p_category:null,p_shop:shopObject.id,p_sort:'newest',p_min:null,p_max:null,p_limit:100,p_offset:0});
+     if(r2.error)throw r2.error;
+     shopCatalog=r2.data||[];
+   }
+ }catch(e){toast(e?.message||'Could not load store');return}
+ shopPage=shopObject;
+ $('app').innerHTML=`<section class="shop-page">
+  <button class="btn shop-back" onclick="goHome()">← Back to Shopora</button>
+  <div class="shop-hero">
+   <div class="shop-cover">${shopObject.cover_url?`<img src="${esc(shopObject.cover_url)}" alt="${esc(shopObject.name)}">`:''}</div>
+   <div class="shop-head">
+    <div class="shop-logo">${shopObject.logo_url?`<img src="${esc(shopObject.logo_url)}" alt="${esc(shopObject.name)}">`:`<span>${esc((shopObject.name||'S')[0].toUpperCase())}</span>`}</div>
+    <div style="flex:1;min-width:0"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap"><div><h1>${esc(shopObject.name)}</h1><p>${esc(shopObject.description||'Local Shopora seller')}</p>${shopObject.address?`<small>📍 ${esc(shopObject.address)}</small>`:''}</div><button class="btn primary" onclick="openShopMessage('${shopObject.id}')">💬 Message seller</button></div></div>
+   </div>
+  </div>
+  <div class="shop-search"><input id="shopSearch" placeholder="Search products in ${esc(shopObject.name)}…" onkeydown="if(event.key==='Enter')searchInsideShop()"><button class="btn primary" onclick="searchInsideShop()">Search store</button></div>
+  <h2>Categories</h2>
+  <div id="shopCategories" class="cats shopcats"></div>
+  <div class="sectionhead"><h2 id="shopProductTitle">All products in ${esc(shopObject.name)}</h2><span class="muted">${shopCatalog.length} available</span></div>
+  <div id="shopProducts" class="grid"></div>
+ </section>`;
+ renderShopPageCategories();renderShopProducts(shopCatalog);
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+let liveSearchTimer=null;
+let liveSearchSeq=0;
+async function findShopsBySearch(q){
+ const clean=String(q||'').trim();
+ if(!clean)return [];
+ const pattern=`%${clean}%`;
+ const [byName,bySlug]=await Promise.all([
+   sb.from('shops').select('id,name,slug,description,address,phone,logo_url,cover_url').eq('active',true).ilike('name',pattern).limit(12),
+   sb.from('shops').select('id,name,slug,description,address,phone,logo_url,cover_url').eq('active',true).ilike('slug',pattern).limit(12)
+ ]);
+ if(byName.error)throw byName.error;
+ if(bySlug.error)throw bySlug.error;
+ const merged=new Map();
+ [...(byName.data||[]),...(bySlug.data||[])].forEach(s=>merged.set(s.id,s));
+ return [...merged.values()].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))).slice(0,12);
+}
+function renderSearchShops(shops,q){
+ const box=$('searchResults');
+ if(!box)return;
+ if(!q){box.hidden=true;box.innerHTML='';return}
+ box.hidden=false;
+ if(!shops.length){box.innerHTML='';return}
+ box.innerHTML=`<h3>Stores matching “${esc(q)}”</h3><div class="search-shops">${shops.map(s=>`<button type="button" class="search-shop" onclick="openShopPageById('${esc(s.id)}')">${s.logo_url?`<img src="${esc(s.logo_url)}" alt="">`:`<span class="initial">${esc((s.name||'S')[0].toUpperCase())}</span>`}<span><b>${esc(s.name)}</b><br><small class="muted">${esc(s.description||'View store and products')}</small></span></button>`).join('')}</div>`;
+}
+async function openShopPageById(id){
+ try{
+   const {data,error}=await sb.from('shops').select('id,name,slug,description,address,phone,logo_url,cover_url').eq('id',id).eq('active',true).maybeSingle();
+   if(error)throw error;
+   if(!data){toast('Store not found');return}
+   await openShopPage(data);
+ }catch(e){toast(e?.message||'Could not open store')}
+}
+async function performSearch(q,scroll=false){
+ const clean=String(q||'').trim();
+ activeCategory=null;
+ const seq=++liveSearchSeq;
+ try{
+   if(!clean){
+     renderSearchShops([], '');
+     if(homeMarkup && $('app') && !$('products'))$('app').innerHTML=homeMarkup;
+     if($('productTitle'))$('productTitle').textContent='Popular products';
+     await loadCatalog('');
+     return;
+   }
+   const [shops]=await Promise.all([findShopsBySearch(clean),loadCatalog(clean)]);
+   if(seq!==liveSearchSeq)return;
+   renderSearchShops(shops,clean);
+   if($('productTitle'))$('productTitle').textContent=`Products matching “${esc(clean)}”`;
+   if(scroll)document.getElementById('products')?.scrollIntoView({behavior:'smooth',block:'start'});
+ }catch(e){
+   if(seq!==liveSearchSeq)return;
+   if($('products'))$('products').innerHTML=`<div class="empty">Search failed.<br>${esc(e?.message||'Please try again.')}</div>`;
+   toast(e?.message||'Search failed');
+ }
+}
+function queueLiveSearch(){
+ clearTimeout(liveSearchTimer);
+ const q=($('search')?.value||'').trim();
+ liveSearchTimer=setTimeout(()=>performSearch(q,false),300);
+}
+async function searchCatalog(){
+ const input=$('search'),btn=$('searchBtn'),q=input.value.trim();
+ if(btn){btn.disabled=true;btn.textContent='Searching…'}
+ try{await performSearch(q,true)}finally{if(btn){btn.disabled=false;btn.textContent='Search'}}
+}
+async function loadCatalog(searchOverride=null){
+  const el=$('products');
+  if(!el)return false;
+  let q=searchOverride===null?$('search').value.trim():String(searchOverride).trim();
+  let min=$('minPrice').value||null,max=$('maxPrice').value||null,sort=$('sort').value||'newest';
+  el.innerHTML='<div class="loading" style="grid-column:1/-1">Loading products…</div>';
+  try{
+    const {data,error}=await sb.rpc('get_shopora_catalog',{
+      p_search:q,p_category:activeCategory,p_shop:null,p_sort:sort,p_min:min,p_max:max,p_limit:80,p_offset:0
+    });
+    if(error)throw error;
+    catalog=data||[];
+    renderCatalog();
+    return true;
+  }catch(e){
+    console.error('loadCatalog failed',e);
+    catalog=[];
+    el.innerHTML=`<div class="error" style="grid-column:1/-1"><b>Products could not be loaded.</b><br>${esc(e?.message||'Database error')}<br><button class="btn small" type="button" onclick="loadCatalog()">Try again</button></div>`;
+    return false;
+  }
+}
+function renderCatalog(){
+ if(!catalog.length){$('products').innerHTML='<div class="empty">No products found.</div>';return}
+ $('products').innerHTML=catalog.map(p=>`<article class="card">
+ <div class="cardimg"><img src="${esc(p.image_url||'')}" onerror="this.style.display='none'"><button class="heart" onclick="toggleWish('${p.id}',event)">♡</button>${p.image_count>1?`<span class="photo-count">▣ ${p.image_count}</span>`:''}</div>
+ <div class="cardbody"><h3>${esc(p.name)}</h3><div class="desc">${esc(p.description||'')}</div><div class="price">${money(p.price)} ${p.compare_price?`<span class="old">${money(p.compare_price)}</span>`:''}</div><div class="shopline">Seller: <button type="button" class="linkbtn" onclick="openSellerStore('${p.shop_id}')">${esc(p.shop_name)}</button> · ⭐ ${Number(p.rating||0).toFixed(1)}</div>
+ <div class="cardactions"><button class="btn" onclick="viewProduct('${p.id}')">View</button><button class="btn primary" onclick='addCart(${JSON.stringify(p).replace(/'/g,"&#39;")})'>Add to cart</button></div></div></article>`).join('')
+}
+async function toggleWish(id,e){e.stopPropagation();if(!currentUser){openAuth('login');return}let {data,error}=await sb.rpc('toggle_shopora_wishlist',{p_product:id});if(error)toast(error.message);else toast(data?'Added to wishlist':'Removed from wishlist')}
+async function viewProduct(id){
+ let {data,error}=await sb.rpc('get_shopora_product',{p_product:id});if(error){toast(error.message);return}currentProduct=data;renderProduct();openModal('productModal')
+}
+function renderProduct(){
+ let p=currentProduct.product,s=currentProduct.shop,imgs=currentProduct.images||[],reviews=currentProduct.reviews||[];
+ $('productBody').innerHTML=`<div class="detail"><div class="gallery"><div class="gallerymain"><img id="mainProductImage" src="${esc(imgs[0]?.image_url||'')}"></div><div class="thumbs">${imgs.map((i,n)=>`<img class="${n===0?'active':''}" src="${esc(i.image_url)}" onclick="pickImage('${esc(i.image_url)}',this)">`).join('')}</div></div>
+ <div><div class="shopline">${esc(currentProduct.category?.name||'')}</div><h1>${esc(p.name)}</h1><div class="stars">★★★★★ <span style="color:#64748b">${Number(p.rating||0).toFixed(1)} (${p.review_count||0})</span></div><div class="price">${money(p.price)} ${p.compare_price?`<span class="old">${money(p.compare_price)}</span>`:''}</div><p>${esc(p.description)}</p><p><b>${p.stock}</b> in stock</p><p>Sold by <button type="button" class="linkbtn" onclick="closeModal('productModal');openSellerStore('${s.id}')"><b>${esc(s.name)}</b></button></p><div class="cardactions"><button class="btn" onclick="closeModal('productModal')">Close</button><button class="btn" onclick="closeModal('productModal');openSellerStore('${s.id}')">View store</button><button class="btn primary" ${p.stock<=0?'disabled':''} onclick="addCart({...catalog.find(x=>x.id===p.id),image_url:${JSON.stringify(imgs[0]?.image_url||'')}})">Add to cart</button></div><hr><h3>Reviews</h3>${reviews.length?reviews.map(r=>`<div class="order"><b>${esc(r.customer)}</b> <span class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span><br><b>${esc(r.title)}</b><p>${esc(r.body)}</p></div>`).join(''):'<p class="desc">No reviews yet.</p>'}</div></div>`
+}
+function pickImage(url,el){$('mainProductImage').src=url;document.querySelectorAll('.thumbs img').forEach(x=>x.classList.remove('active'));el.classList.add('active')}
+function renderCart(){
+ if(!cart.length){$('cartBody').innerHTML=`<div class="empty">Your cart is empty.<br><button class="btn primary" onclick="closeModal('cart');document.getElementById('products').scrollIntoView()">Continue shopping</button></div>`;return}
+ let total=cart.reduce((a,x)=>a+x.price*x.quantity,0);
+ $('cartBody').innerHTML=cart.map(x=>`<div class="cartrow"><img src="${esc(x.image_url||'')}"><div><b>${esc(x.name)}</b><div>${money(x.price)} × ${x.quantity}</div><button class="btn small danger" onclick="removeCart('${x.product_id}')">Remove</button></div><div class="qty"><button onclick="changeQty('${x.product_id}',-1)">−</button><span>${x.quantity}</span><button onclick="changeQty('${x.product_id}',1)">+</button></div></div>`).join('')+`<div style="text-align:right;margin-top:18px"><h2>Total ${money(total)}</h2><button class="btn primary" onclick="openCheckout()">Checkout</button></div>`
+}
+async function openCheckout(){
+ if(!currentUser){openAuth('login');return}
+ if(!cart.length){toast('Your cart is empty');return}
+
+ /* Open immediately so a slow/broken RPC can never make the Checkout
+    button appear dead. */
+ openModal('checkout');
+ $('checkoutBody').innerHTML='<div class="notice">Preparing secure checkout…</div>';
+
+ const checkoutItems=cart.map(x=>({
+   product_id:x.product_id,
+   shop_id:x.shop_id,
+   quantity:Math.max(1,Number(x.quantity)||1)
+ }));
+
+ try{
+   const result=await sb.rpc('get_shopora_checkout_payment_options',{p_items:checkoutItems});
+   if(result.error) throw result.error;
+
+   await loadAddresses();
+
+   const shops=(result.data||[]).map(s=>({
+     ...s,
+     methods:(Array.isArray(s.methods)?s.methods:[])
+       .filter(m=>m&&m.name&&String(m.name).trim())
+   }));
+
+   if(!shops.length){
+     $('checkoutBody').innerHTML=`
+       <div class="error">
+         <b>Checkout could not be prepared.</b>
+         <p>The product is no longer available. Please close checkout and refresh the products.</p>
+       </div>
+       <button class="btn" onclick="closeModal('checkout');loadCatalog()">Close</button>`;
+     return;
+   }
+
+   const subtotal=shops.reduce((a,s)=>a+Number(s.subtotal||0),0);
+   const shipping=shops.reduce((a,s)=>a+Number(s.shipping||0),0);
+   const total=subtotal+shipping;
+
+   const paymentHtml=shops.map(s=>{
+     const id=`pay_${s.shop_id}`;
+     const methods=s.methods;
+     return `<div class="order" style="margin-top:10px">
+       <b>${esc(s.shop_name)}</b>
+       <div class="form" style="margin-top:8px">
+         <label>Payment method</label>
+         <select id="${id}" ${methods.length?'':'disabled'}>
+           ${methods.length
+             ?methods.map(m=>`<option value="${esc(m.name)}">${esc(m.name)}</option>`).join('')
+             :'<option value="">Seller has not added a payment method</option>'}
+         </select>
+         <div id="${id}_details" class="notice" style="margin-top:8px"></div>
+       </div>
+     </div>`;
+   }).join('');
+
+   $('checkoutBody').innerHTML=`
+     <div class="formgrid">
+       <div>
+         <h3>Delivery address</h3>
+         <div id="addressList"></div>
+         <button class="btn" type="button" onclick="addAddressForm()">+ Add address</button>
+       </div>
+       <div>
+         <h3>Payment</h3>
+         <div class="notice">Each seller controls their own payment method and payment details.</div>
+         ${paymentHtml}
+         <div class="form" style="margin-top:12px">
+           <label>Payment reference / transaction ID (optional)</label>
+           <input id="payRef" placeholder="Reference / transaction ID">
+           <label>Payment proof (optional)</label>
+           <input id="proof" type="file" accept="image/jpeg,image/png,image/webp,application/pdf">
+         </div>
+       </div>
+     </div>
+     <hr>
+     <div>
+       <h3>Order summary</h3>
+       <div style="display:flex;justify-content:space-between"><span>Subtotal</span><b>${money(subtotal)}</b></div>
+       <div style="display:flex;justify-content:space-between;margin-top:6px"><span>Shipping</span><b>${shipping?money(shipping):'FREE'}</b></div>
+       <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:1.15em"><span>Total</span><b>${money(total)}</b></div>
+       <button id="placeOrderBtn" type="button" class="btn primary" style="margin-top:14px;width:100%" onclick="placeOrder()">Place order</button>
+     </div>`;
+
+   renderAddressList();
+
+   shops.forEach(s=>{
+     const sel=$(`pay_${s.shop_id}`);
+     if(sel){
+       const render=()=>{
+         const m=s.methods.find(x=>String(x.name)===String(sel.value));
+         $(`pay_${s.shop_id}_details`).textContent=
+           m?.details||'No payment instructions were provided by this seller.';
+       };
+       sel.addEventListener('change',render);
+       render();
+     }
+   });
+ }catch(error){
+   console.error('Shopora checkout preparation failed:',error);
+   $('checkoutBody').innerHTML=`
+     <div class="error">
+       <b>Unable to prepare checkout.</b>
+       <p>${esc(error?.message||'Please try again.')}</p>
+     </div>
+     <div style="display:flex;gap:8px">
+       <button class="btn primary" type="button" onclick="openCheckout()">Try again</button>
+       <button class="btn" type="button" onclick="closeModal('checkout')">Close</button>
+     </div>`;
+ }
+}
+
+async function placeOrder(){
+ const btn=$('placeOrderBtn');
+ if(btn?.disabled)return;
+
+ const radio=document.querySelector('input[name="addr"]:checked');
+ if(!radio){toast('Choose a delivery address');return}
+ const addr=addresses.find(x=>x.id===radio.value);
+ if(!addr){toast('Address not found');return}
+
+ const selects=[...document.querySelectorAll('select[id^="pay_"]')];
+ const paymentMethods={};
+ for(const sel of selects){
+   const shopId=sel.id.slice(4);
+   const method=(sel.value||'').trim();
+   if(!method){toast('Select a payment method for every seller');return}
+   paymentMethods[shopId]=method;
+ }
+
+ const ref=$('payRef')?.value.trim()||'';
+ const proofFile=$('proof')?.files?.[0]||null;
+ let proof=null;
+
+ if(proofFile){
+   if(proofFile.size>10*1024*1024){toast('Payment proof must be 10 MB or smaller');return}
+   const allowed=['image/jpeg','image/png','image/webp','application/pdf'];
+   if(!allowed.includes(proofFile.type)){toast('Use JPG, PNG, WEBP or PDF for payment proof');return}
+ }
+
+ if(btn){btn.disabled=true;btn.textContent='Processing order…'}
+
+ try{
+   if(proofFile){
+     const safeName=proofFile.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+     const path=`${currentUser.id}/${crypto.randomUUID()}-${safeName}`;
+     const up=await sb.storage.from('payment-proofs').upload(path,proofFile,{upsert:false});
+     if(up.error)throw up.error;
+     proof=path;
+   }
+
+   const {data,error}=await sb.rpc('create_shopora_order_v52',{
+     p_items:cart.map(x=>({product_id:x.product_id,shop_id:x.shop_id,quantity:x.quantity})),
+     p_address:addr,
+     p_payment_methods:paymentMethods,
+     p_payment_reference:ref,
+     p_payment_proof:proof,
+     p_coupon:null
+   });
+   if(error)throw error;
+
+   cart=[];saveCart();
+   closeModal('checkout');closeModal('cart');
+   toast(`Order ${data.order_number} placed successfully`);
+   openOrders();
+ }catch(error){
+   toast(error?.message||'Could not place the order');
+ }finally{
+   if(btn){btn.disabled=false;btn.textContent='Place order'}
+ }
+}
+
+async function openOrders(){
+ if(!currentUser){openAuth('login');return}
+ $('ordersBody').innerHTML='<div class="loading">Loading your orders…</div>';
+ openModal('orders');
+ try{
+   const {data,error}=await sb.rpc('get_shopora_customer_orders',{p_status:null});
+   if(error)throw error;
+   $('ordersBody').innerHTML=`<div class="tabs"><button class="tab active">All orders</button></div>${(data||[]).map(renderCustomerOrder).join('')||'<div class="empty">No orders yet. Your completed orders will appear here.</div>'}`;
+ }catch(e){
+   $('ordersBody').innerHTML=`<div class="error"><b>Could not load your orders.</b><br>${esc(e.message||'Please try again.')}</div><button class="btn primary" onclick="openOrders()">Try again</button>`;
+ }
+}
+async function confirmReceived(id){if(!confirm('Confirm that you received this package?'))return;let {error}=await sb.rpc('customer_confirm_shopora_received',{p_seller_order:id});if(error)toast(error.message);else{toast('Receipt confirmed and seller notified');openOrders()}}
+async function openNotifications(){if(!currentUser){openAuth('login');return}let {data,error}=await sb.rpc('get_shopora_notifications',{});if(error){toast(error.message);return}$('notificationsBody').innerHTML=`<button class="btn small" onclick="markAllNotifications()">Mark all read</button><div style="margin-top:10px">${(data||[]).map(n=>`<div class="order" onclick="readNotification('${n.id}')"><b>${esc(n.title)}</b>${n.read_at?'':' <span class="badge">NEW</span>'}<p>${esc(n.message)}</p><small>${new Date(n.created_at).toLocaleString()}</small></div>`).join('')||'<div class="empty">No notifications.</div>'}</div>`;openModal('notifications')}
+async function readNotification(id){await sb.rpc('mark_shopora_notification_read',{p_id:id});openNotifications();loadNotifications()}
+async function markAllNotifications(){await sb.rpc('mark_all_shopora_notifications_read');openNotifications();loadNotifications()}
+async function loadNotifications(){if(!currentUser){$('notifCount').textContent='';return}let {data}=await sb.rpc('get_shopora_notifications',{});let n=(data||[]).filter(x=>!x.read_at).length;$('notifCount').textContent=n?`(${n})`:''}
+
+function openAuth(mode='login'){closeAll();$('authTitle').textContent=mode==='login'?'Log in':'Create account';$('authBody').innerHTML=mode==='login'?loginForm():signupForm();openModal('auth')}
+function loginForm(){return `<form class="form" onsubmit="login(event)"><input id="loginEmail" type="email" placeholder="Email address" required><input id="loginPassword" type="password" placeholder="Password" required><button class="btn primary">Log in</button><button type="button" class="btn" onclick="openAuth('signup')">Create account</button><button type="button" class="btn" onclick="resetPassword()">Forgot password?</button><div id="authMsg"></div></form>`}
+function signupForm(){return `<form class="form" onsubmit="signup(event)"><input id="signName" placeholder="Full name" required><input id="signPhone" placeholder="Phone number" required><input id="signEmail" type="email" placeholder="Email address" required><input id="signPassword" type="password" minlength="12" placeholder="Password (12+ characters)" required><button class="btn primary">Create account</button><button type="button" class="btn" onclick="openAuth('login')">Already registered? Log in</button><div id="authMsg"></div></form>`}
+async function signup(e){
+ e.preventDefault();
+ const email=$('signEmail').value.trim().toLowerCase(),name=$('signName').value.trim(),phone=$('signPhone').value.trim(),password=$('signPassword').value;
+ if(password.length<12 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password) || !/[^A-Za-z0-9]/.test(password)){
+   $('authMsg').innerHTML='<div class="error">Use at least 12 characters with uppercase, lowercase, a number and a symbol.</div>';
+   return;
+ }
+ $('authMsg').innerHTML='<div class="notice">Creating account and sending verification email…</div>';
+ try{
+   const {data,error}=await sb.auth.signUp({email,password,options:{data:{full_name:name,phone},emailRedirectTo:SITE_URL}});
+   if(error){$('authMsg').innerHTML=`<div class="error">${esc(error.message)}</div>`;return}
+   // Supabase may hide an existing account for security. In that case identities is empty.
+   if(data?.user && Array.isArray(data.user.identities) && data.user.identities.length===0){
+     $('authMsg').innerHTML='<div class="error"><b>This email is already registered.</b><br>Please log in or use Forgot password.</div>';return;
+   }
+   $('authMsg').innerHTML=`<div class="successmsg"><b>Verification email requested.</b><br>Check ${esc(email)} and click the verification link. If it does not arrive, check spam and the Supabase email/SMTP configuration.</div>`;
+ }catch(err){$('authMsg').innerHTML=`<div class="error">${esc(err?.message||'Could not create account')}</div>`}
+}
+async function login(e){e.preventDefault();$('authMsg').innerHTML='';let {data,error}=await sb.auth.signInWithPassword({email:$('loginEmail').value.trim(),password:$('loginPassword').value});if(error){$('authMsg').innerHTML=`<div class="error">${esc(error.message)}<br><button type="button" class="btn small" onclick="resendVerification()">Resend verification email</button></div>`;return}if(!data.user.email_confirmed_at){await sb.auth.signOut();$('authMsg').innerHTML='<div class="error"><b>Email verification not completed.</b><br>Please click the verification link sent to your email before logging in.</div>';return}setAuthUser(data);closeModal('auth');toast('Welcome back')}
+async function resendVerification(){let email=$('loginEmail')?.value.trim();if(!email){toast('Enter your email first');return}let {error}=await sb.auth.resend({type:'signup',email});toast(error?error.message:'Verification email sent')}
+async function resetPassword(){const email=prompt('Enter the email address for your Shopora account');if(!email)return;const clean=email.trim().toLowerCase();const {error}=await sb.auth.resetPasswordForEmail(clean,{redirectTo:recoveryRedirect()});toast(error?error.message:'Password reset email sent. Check your inbox and open the reset link.')}
+function openAccount(){if(!currentUser){openAuth('login');return}renderAccount();openModal('account')}
+async function renderAccount(){
+ let {data:p,error:profileError}=await sb.from('profiles').select('*').eq('id',currentUser.id).maybeSingle();
+ if(profileError){toast(profileError.message);p=currentProfile}
+ currentProfile=p||currentProfile;updateNav();
+ $('accountBody').innerHTML=`<div style="display:flex;align-items:center;gap:10px">${avatar(p?.avatar_url,p?.full_name||currentUser.email)}<div><b>${esc(p?.full_name||currentUser.email)}</b><br><small>${esc(currentUser.email)}</small></div></div><hr><div class="form"><input id="profileName" value="${esc(p?.full_name||'')}" placeholder="Full name"><input id="profilePhone" value="${esc(p?.phone||'')}" placeholder="WhatsApp / phone"><div id="profileImagePreview" style="margin:8px 0">${avatar(p?.avatar_url,p?.full_name||currentUser.email)}</div><input id="avatarFile" type="file" accept="image/*" onchange="previewProfileImage(this)"><button class="btn primary" onclick="saveProfile()">Save profile</button><button class="btn" onclick="openOrders()">My Orders</button>${isSeller?'<button class="btn" onclick="openSeller()">Seller Centre</button>':'<button class="btn" onclick="openSeller()">Become a seller</button>'}${isShoporaSuperAdmin()?'<button class="btn primary" onclick="openSuperAdmin()">Super Admin</button>':''}<button class="btn" onclick="manageAddresses()">Addresses</button><button class="btn danger" onclick="logout()">Log out</button><button class="btn danger-outline" onclick="deleteMyAccount()">Delete account</button></div>`
+}
+async function deleteMyAccount(){
+ if(!currentUser?.id)return;
+ if(!confirm('Delete your Shopora account permanently? Customer profile, addresses, wishlist and customer orders will be removed.'))return;
+ try{
+   const {error}=await sb.rpc('delete_my_shopora_account');
+   if(error)throw error;
+   await sb.auth.signOut();
+   currentUser=null;currentProfile=null;isSeller=false;shopData=null;addresses=[];cart=[];saveCart();closeAll();updateNav();toast('Account deleted');
+ }catch(e){toast(e?.message||'Could not delete account')}
+}
+function previewProfileImage(input){
+ const f=input?.files?.[0];
+ if(!f)return;
+ if(!f.type.startsWith('image/')){toast('Please choose an image file');input.value='';return}
+ if(f.size>5*1024*1024){toast('Profile picture must be 5 MB or smaller');input.value='';return}
+ const reader=new FileReader();
+ reader.onload=()=>{$('profileImagePreview').innerHTML=avatar(reader.result,$('profileName')?.value||currentUser?.email||'U')};
+ reader.readAsDataURL(f);
+}
+async function saveProfile(){
+ try{
+   let url=currentProfile?.avatar_url||currentUser?.user_metadata?.avatar_url||null;
+   let f=$('avatarFile').files[0];
+   if(f){
+     if(!f.type.startsWith('image/')){toast('Please choose an image file');return}
+     if(f.size>5*1024*1024){toast('Profile picture must be 5 MB or smaller');return}
+     let ext=(f.name.split('.').pop()||'jpg').toLowerCase();
+     let path=`${currentUser.id}/${crypto.randomUUID()}.${ext}`;
+     let up=await sb.storage.from('profile-photos').upload(path,f,{upsert:false});
+     if(up.error)throw up.error;
+     let publicResult=sb.storage.from('profile-photos').getPublicUrl(path);
+url=(publicResult?.data?.publicUrl||'')+'?v='+Date.now();
+if(!url || url==='?v='+Date.now())throw new Error('Could not create the profile picture URL');
+   }
+   let update={id:currentUser.id,full_name:$('profileName').value.trim(),phone:$('profilePhone').value.trim(),updated_at:new Date().toISOString()};
+   if(url)update.avatar_url=url;
+   let {data,error}=await sb.from('profiles').upsert(update,{onConflict:'id'}).select().single();
+   if(error)throw error;
+   currentProfile=data;
+   currentUser.user_metadata={...currentUser.user_metadata,full_name:data.full_name,avatar_url:data.avatar_url};
+   updateNav();
+   toast('Profile saved');
+   renderAccount();
+ }catch(e){toast(e.message||'Could not save profile')}
+}
+
+async function loadAddresses(){
+  if(!currentUser){addresses=[];return []}
+  const {data,error}=await sb.from('addresses')
+    .select('id,label,recipient_name,phone,line1,line2,city,postal_code,country,address_text,is_default,created_at,updated_at')
+    .eq('user_id',currentUser.id)
+    .order('is_default',{ascending:false})
+    .order('created_at',{ascending:false});
+  if(error) throw new Error(error.message);
+  addresses=data||[];
+  return addresses;
+}
+function addressFormMarkup(){
+ return `<form class="form" onsubmit="saveNewAddress(event)">
+   <input id="addrLabel" placeholder="Label (e.g. Home)" value="Home" required>
+   <input id="addrName" placeholder="Recipient name" required>
+   <input id="addrPhone" placeholder="Phone number" required>
+   <input id="addrLine1" placeholder="Address / street" required>
+   <input id="addrLine2" placeholder="Apartment, building, landmark (optional)">
+   <input id="addrCity" placeholder="City / village" required>
+   <input id="addrPostal" placeholder="Postal code (optional)">
+   <label><input id="addrDefault" type="checkbox" checked> Make this my default address</label>
+   <button class="btn primary" type="submit">Save address</button>
+   <button class="btn" type="button" onclick="loadAddresses().then(()=>{if($('addressList'))renderAddressList();else manageAddresses()})">Cancel</button>
+ </form>`;
+}
+function addAddressForm(){
+  if($('addressList')){
+    $('addressList').innerHTML=`<div class="order" style="margin-bottom:10px"><b>Add delivery address</b>${addressFormMarkup()}</div>`;
+    return;
+  }
+  const body=$('accountBody');
+  if(!body)return;
+  body.innerHTML=`<h3>Delivery address</h3>${addressFormMarkup()}`;
+}
+function renderAddressList(){
+  const el=$('addressList');
+  if(!el)return;
+  if(!addresses.length){
+    el.innerHTML='<div class="notice">No delivery address saved. Add one before placing your order.</div>';
+    return;
+  }
+  el.innerHTML=addresses.map(a=>`
+    <label class="order" style="display:block;cursor:pointer;margin-bottom:8px">
+      <input type="radio" name="addr" value="${esc(a.id)}" ${a.is_default?'checked':''}>
+      <b>${esc(a.label||'Address')}</b> — ${esc(a.recipient_name||'')}
+      <div>${esc(a.line1||'')}${a.line2?`, ${esc(a.line2)}`:''}<br>${esc(a.city||'')}${a.postal_code?`, ${esc(a.postal_code)}`:''}</div>
+      <small>${esc(a.phone||'')}</small>
+    </label>`).join('');
+}
+async function saveNewAddress(event){
+  event.preventDefault();
+  const values={
+    p_id:null,
+    p_label:$('addrLabel').value.trim()||'Home',
+    p_name:$('addrName').value.trim(),
+    p_phone:$('addrPhone').value.trim(),
+    p_line1:$('addrLine1').value.trim(),
+    p_line2:$('addrLine2').value.trim(),
+    p_city:$('addrCity').value.trim(),
+    p_postal:$('addrPostal').value.trim(),
+    p_default:$('addrDefault').checked
+  };
+  if(!values.p_name||!values.p_phone||!values.p_line1||!values.p_city){
+    toast('Please complete the required address fields'); return;
+  }
+  const {error}=await sb.rpc('save_shopora_address',values);
+  if(error){toast(error.message||'Could not save address');return}
+  await loadAddresses();
+  toast('Address saved');
+  if($('addressList')) renderAddressList();
+  else manageAddresses();
+}
+async function manageAddresses(){
+  await loadAddresses();
+  const body=$('accountBody'); if(!body)return;
+  body.innerHTML=`<h3>Delivery addresses</h3>
+    <div id="addressList">${addresses.map(a=>`<div class="order">
+      <b>${esc(a.label||'Address')}</b>
+      <p>${esc(a.recipient_name||'')} · ${esc(a.phone||'')}<br>${esc(a.line1||'')}${a.line2?`, ${esc(a.line2)}`:''}, ${esc(a.city||'')}${a.postal_code?`, ${esc(a.postal_code)}`:''}</p>
+      <button class="btn danger small" onclick="deleteAddress('${a.id}')">Delete</button>
+    </div>`).join('')||'<div class="notice">No delivery address saved.</div>'}</div>
+    <button class="btn primary" onclick="addAddressForm()">Add address</button>`;
+}
+async function deleteAddress(id){
+ if(!confirm('Delete this delivery address?'))return;
+ let {error}=await sb.rpc('delete_shopora_address',{p_id:id});
+ if(error){
+   toast(error.message?.includes('foreign key')||error.message?.includes('orders_address')
+     ?'This address is linked to an order. The order will keep its delivery details, then the address can be deleted after the database migration is applied.'
+     :error.message);
+   return;
+ }
+ await manageAddresses();
+ toast('Address deleted');
+}
+async function logout(){await sb.auth.signOut();currentUser=null;session=null;closeAll();updateNav();toast('Logged out')}
+
+async function openSeller(){
+ if(!currentUser){openAuth('login');return}
+ try{
+   let {data,error}=await sb.from('shops').select('*').eq('owner_id',currentUser.id).maybeSingle();
+   if(error)throw error;
+   if(!data){openSellerOnboarding();return}
+   isSeller=true;shopData=data;setPageMode('seller');
+   await loadSellerProducts();
+   await loadSellerOrders();
+   sellerTab='dashboard';
+   renderSeller();
+   openModal('seller');
+ }catch(e){
+   console.error('openSeller',e);
+   toast(e.message||'Could not open Seller Centre');
+ }
+}
+function openSellerOnboarding(){
+ if(!currentUser){openAuth('login');return}
+ closeAll();
+ $('sellerBody').innerHTML=`<div class="seller-onboarding">
+   <div class="onboard-icon">🏪</div>
+   <h2>Become a seller</h2>
+   <p class="muted">Create your store and start listing products. You can add your logo, cover photo, payment methods and products after setup.</p>
+   <div class="form">
+     <input id="onboardShopName" placeholder="Shop name" maxlength="80">
+     <input id="onboardShopPhone" placeholder="Business phone" maxlength="30">
+     <input id="onboardShopAddress" placeholder="Business / pickup address">
+     <textarea id="onboardShopDesc" rows="4" placeholder="Tell customers about your shop"></textarea>
+     <div class="notice">You can configure your shop logo, cover photo, shipping and payment methods in Seller Centre after creating the shop.</div>
+     <button class="btn primary" onclick="createSellerShop()">Create my shop</button>
+     <button class="btn" onclick="closeModal('seller')">Cancel</button>
+   </div>
+ </div>`;
+ setPageMode('seller');
+ openModal('seller');
+}
+async function createSellerShop(){
+ try{
+   if(!currentUser){openAuth('login');return}
+   const name=$('onboardShopName').value.trim();
+   if(name.length<2){toast('Enter a shop name');return}
+   const {data,error}=await sb.rpc('save_shopora_shop',{
+     p_name:name,
+     p_description:$('onboardShopDesc').value.trim(),
+     p_address:$('onboardShopAddress').value.trim(),
+     p_phone:$('onboardShopPhone').value.trim(),
+     p_logo:'',
+     p_cover:'',
+     p_shipping:0,
+     p_free:null
+   });
+   if(error)throw error;
+   isSeller=true;shopData=data;
+   toast('Your shop was created');
+   await loadSellerProducts();await loadSellerOrders();
+   sellerTab='dashboard';renderSeller();setPageMode('seller');
+ }catch(e){toast(e.message||'Could not create your shop')}
+}
+async function loadSellerProducts(){let {data,error}=await sb.rpc('get_shopora_seller_products',{});if(error)toast(error.message);sellerProducts=data||[]}
+async function loadSellerOrders(){
+ let {data,error}=await sb.rpc('get_shopora_seller_orders',{p_status:null,p_search:''});
+ if(error){sellerOrders=[];toast(error.message);return false}
+ sellerOrders=data||[];return true
+}
+
+function sellerReportRows(){
+  const from=$('reportFrom')?.value||'';
+  const to=$('reportTo')?.value||'';
+  const status=$('reportStatus')?.value||'';
+  const payment=$('reportPayment')?.value||'';
+  const search=($('reportSearch')?.value||'').trim().toLowerCase();
+  const fromTs=from?new Date(from+'T00:00:00'):null;
+  const toTs=to?new Date(to+'T23:59:59.999'):null;
+
+  return (sellerOrders||[]).filter(o=>{
+    const d=new Date(o.created_at||0);
+    if(fromTs && d<fromTs)return false;
+    if(toTs && d>toTs)return false;
+    if(status && String(o.status||'')!==status)return false;
+    if(payment && String(o.payment_status||'')!==payment)return false;
+    if(search){
+      const hay=[
+        o.order_number,o.customer_name,o.customer_phone,o.payment_method,
+        ...(o.items||[]).map(i=>i.name)
+      ].join(' ').toLowerCase();
+      if(!hay.includes(search))return false;
+    }
+    return true;
+  });
+}
+function reportStatusLabel(v){return String(v||'pending').replaceAll('_',' ')}
+function reportDate(v){
+  if(!v)return '';
+  const d=new Date(v); return Number.isNaN(d.getTime())?'':d.toLocaleString('en-MU');
+}
+function latestReportDate(){
+ const dates=(sellerOrders||[]).map(o=>new Date(o.created_at||0)).filter(d=>!Number.isNaN(d.getTime())&&d.getTime()>0);
+ if(!dates.length)return localDateInput(new Date());
+ dates.sort((a,b)=>b-a); return localDateInput(dates[0]);
+}
+function sellerReportRows(){
+  const from=$('reportFrom')?.value||'';
+  const to=$('reportTo')?.value||'';
+  const status=$('reportStatus')?.value||'';
+  const payment=$('reportPayment')?.value||'';
+  const search=($('reportSearch')?.value||'').trim().toLowerCase();
+  const fromTs=from?new Date(from+'T00:00:00'):null;
+  const toTs=to?new Date(to+'T23:59:59.999'):null;
+  return (sellerOrders||[]).filter(o=>{
+    const d=new Date(o.created_at||0);
+    if(fromTs&&d<fromTs)return false;if(toTs&&d>toTs)return false;
+    if(status&&String(o.status||'')!==status)return false;if(payment&&String(o.payment_status||'')!==payment)return false;
+    if(search){const hay=[o.order_number,o.customer_name,o.customer_phone,o.payment_method,o.payment_details,...(o.items||[]).map(i=>i.name)].join(' ').toLowerCase();if(!hay.includes(search))return false}
+    return true;
+  }).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+}
+function sellerReportsView(){
+ const latest=latestReportDate();
+ const rows=(sellerOrders||[]).filter(o=>localDateInput(new Date(o.created_at||0))===latest).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+ return `<div class="seller-shell-title"><div class="mark">📈</div><div><h2>Sales reports</h2><p>Review daily transactions, filter them and export a professional Excel report.</p></div></div>
+ <div class="report-card"><div class="notice"><b>Default view:</b> latest transaction day only. Choose another date or date range to expand the report.</div>
+ <div class="form" style="margin-top:14px"><div class="formgrid"><div><label>From date</label><input id="reportFrom" type="date" value="${latest}" onchange="refreshSellerReport()"></div><div><label>To date</label><input id="reportTo" type="date" value="${latest}" onchange="refreshSellerReport()"></div></div>
+ <div class="formgrid"><div><label>Order status</label><select id="reportStatus" onchange="refreshSellerReport()"><option value="">All statuses</option><option value="payment_pending">Payment pending</option><option value="processing">Processing</option><option value="packed">Packed</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div><div><label>Payment status</label><select id="reportPayment" onchange="refreshSellerReport()"><option value="">All payments</option><option value="pending">Payment pending</option><option value="paid">Paid</option><option value="failed">Failed</option><option value="refunded">Refunded</option></select></div></div>
+ <div class="formgrid"><div><label>Search</label><input id="reportSearch" placeholder="Order, customer, WhatsApp or product" oninput="refreshSellerReport()"></div><div><label>Quick period</label><select id="reportPreset" onchange="applyReportPreset()"><option value="custom">Custom dates</option><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="month">This month</option></select></div></div>
+ <div class="cardactions"><button class="btn" onclick="clearSellerReportFilters()">Clear filters</button><button class="btn primary" onclick="exportSellerReport()">📊 Export Excel report</button></div></div></div>
+ <div id="sellerReportSummary" class="statgrid" style="margin-top:15px">${renderReportSummary(rows)}</div><div id="sellerReportPreview" style="margin-top:15px">${renderSellerReportPreview(rows)}</div>`;
+}
+function renderReportSummary(rows){const itemCount=rows.reduce((n,o)=>n+(o.items||[]).reduce((a,i)=>a+Number(i.quantity||0),0),0),total=rows.reduce((n,o)=>n+Number(o.total||0),0);return `<div class="stat"><small>Orders</small><b>${rows.length}</b></div><div class="stat"><small>Items sold</small><b>${itemCount}</b></div><div class="stat"><small>Order value</small><b>${money(total)}</b></div><div class="stat"><small>Pending delivery</small><b>${rows.filter(o=>['payment_pending','processing','packed','shipped'].includes(o.status)).length}</b></div>`}
+function renderSellerReportPreview(rows){
+ if(!rows.length)return '<div class="empty">No transactions match the selected filters.</div>';
+ return `<div class="tablewrap"><table class="report-table"><thead><tr><th>Date</th><th>Order</th><th>Customer</th><th>WhatsApp</th><th>Products</th><th>Qty</th><th>Total(MUR)</th><th>Payment</th><th>Method</th><th>Status</th></tr></thead><tbody>${rows.map(o=>`<tr><td>${esc(reportDate(o.created_at))}</td><td><b>${esc(o.order_number||'')}</b></td><td>${esc(o.customer_name||'Customer')}</td><td>${esc(o.customer_phone||'')}</td><td>${(o.items||[]).map(i=>esc(i.name||'Product')+' × '+Number(i.quantity||0)).join('<br>')}</td><td class="num">${(o.items||[]).reduce((n,i)=>n+Number(i.quantity||0),0)}</td><td class="num"><b>${Number(o.total||0).toLocaleString('en-MU',{maximumFractionDigits:2})}</b></td><td>${esc(o.payment_status||'pending')}</td><td>${esc(o.payment_method||'')}</td><td>${esc(reportStatusLabel(o.status))}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function refreshSellerReport(){
+ const rows=sellerReportRows(); const summary=$('sellerReportSummary'),preview=$('sellerReportPreview');
+ if(summary)summary.innerHTML=renderReportSummary(rows); if(preview)preview.innerHTML=renderSellerReportPreview(rows);
+}
+function localDateInput(d){
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function applyReportPreset(){
+ const p=$('reportPreset')?.value;if(!p||p==='custom')return;const now=new Date(),to=new Date(now),from=new Date(now);
+ if(p==='yesterday'){from.setDate(from.getDate()-1);to.setDate(to.getDate()-1)}else if(p==='7')from.setDate(from.getDate()-6);else if(p==='30')from.setDate(from.getDate()-29);else if(p==='month')from.setDate(1);
+ if($('reportFrom'))$('reportFrom').value=localDateInput(from);if($('reportTo'))$('reportTo').value=localDateInput(to);refreshSellerReport();
+}
+function clearSellerReportFilters(){
+ const latest=latestReportDate(); if($('reportFrom'))$('reportFrom').value=latest;if($('reportTo'))$('reportTo').value=latest;if($('reportSearch'))$('reportSearch').value='';if($('reportStatus'))$('reportStatus').value='';if($('reportPayment'))$('reportPayment').value='';if($('reportPreset'))$('reportPreset').value='custom';refreshSellerReport();
+}
+function excelEscape(v){
+  return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function exportSellerReport(){
+ const rows=sellerReportRows();if(!rows.length){toast('No orders match the selected filters');return}if(!window.XLSX){toast('Excel exporter is still loading. Please try again.');return}
+ const from=$('reportFrom')?.value||'All dates',to=$('reportTo')?.value||'All dates',shopName=shopData?.name||'Shopora seller';
+ const data=rows.map(o=>[reportDate(o.created_at),o.order_number||'',o.customer_name||'',o.customer_phone||'',(o.items||[]).map(i=>`${i.name||'Product'} × ${Number(i.quantity||0)}`).join(' | '),(o.items||[]).reduce((n,i)=>n+Number(i.quantity||0),0),Number(o.total||0),o.payment_status||'pending',o.payment_method||'',o.status||'',o.tracking_number||'',o.carrier||'',o.delivery?.line1||o.delivery?.address_text||o.delivery?.city||'']);
+ const ws=XLSX.utils.aoa_to_sheet([['SHOPORA SALES REPORT'],['Shop',shopName],['Period',`${from} → ${to}`],[],['Date','Order','Customer','WhatsApp','Products','Qty','Total(MUR)','Payment','Payment Method','Status','Tracking','Carrier','Delivery Address'],...data]);
+ ws['!cols']=[{wch:21},{wch:25},{wch:24},{wch:18},{wch:42},{wch:8},{wch:14},{wch:15},{wch:20},{wch:16},{wch:20},{wch:18},{wch:42}];ws['!freeze']={xSplit:0,ySplit:5};ws['!autofilter']={ref:`A5:M${data.length+5}`};
+ for(let r=6;r<data.length+6;r++){if(ws[`G${r}`])ws[`G${r}`].z='#,##0.00'}
+ const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Transactions');
+ const pending=rows.filter(o=>['payment_pending','processing','packed','shipped'].includes(o.status)).map(o=>[reportDate(o.created_at),o.order_number||'',o.customer_name||'',o.customer_phone||'',o.payment_status||'',o.status||'',Number(o.total||0),o.payment_method||'',o.tracking_number||'',o.delivery?.line1||o.delivery?.address_text||o.delivery?.city||'']);
+ const wp=XLSX.utils.aoa_to_sheet([['Date','Order','Customer','WhatsApp','Payment Status','Delivery Status','Amount(MUR)','Payment Method','Tracking','Delivery Address'],...pending]);wp['!cols']=[{wch:21},{wch:25},{wch:24},{wch:18},{wch:18},{wch:18},{wch:14},{wch:20},{wch:20},{wch:42}];if(pending.length)wp['!autofilter']={ref:`A1:J${pending.length+1}`};XLSX.utils.book_append_sheet(wb,wp,'Pending Delivery');
+ XLSX.writeFile(wb,`Shopora-Sales-Report-${localDateInput(new Date()).replaceAll('-','')}.xlsx`,{bookType:'xlsx',compression:true});toast(`Excel report generated: ${rows.length} orders`);
+}
+function sellerDashboard(){let revenue=sellerOrders.filter(o=>o.payment_status==='paid').reduce((a,o)=>a+Number(o.total||0),0),pending=sellerOrders.filter(o=>o.status==='payment_pending').length,packed=sellerOrders.filter(o=>o.status==='packed').length;return `<div class="seller-shell-title"><div class="mark">📊</div><div><h2>Seller Centre</h2><p>Manage your shop, products, orders, payments and reports.</p></div></div><div class="statgrid"><div class="stat"><small>Revenue</small><b>${money(revenue)}</b></div><div class="stat"><small>Total orders</small><b>${sellerOrders.length}</b></div><div class="stat"><small>Payment pending</small><b>${pending}</b></div><div class="stat"><small>Packed</small><b>${packed}</b></div></div><div class="notice" style="margin-top:15px">Your seller account is connected to Shopora's order, inventory and notification system.</div>`}
+function sellerShop(){let s=shopData||{};return `<h2>Shop profile</h2><div class="form">
+<div class="formgrid"><input id="shopName" value="${esc(s.name||'')}" placeholder="Shop name"><input id="shopPhone" value="${esc(s.phone||'')}" placeholder="Shop phone"></div>
+<input id="shopAddress" value="${esc(s.address||'')}" placeholder="Shop address">
+<textarea id="shopDesc" rows="4" placeholder="Shop description">${esc(s.description||'')}</textarea>
+
+<div class="media-editor">
+  <div class="media-box">
+    <h3>Shop logo</h3>
+    <p class="muted">Shown beside your shop name.</p>
+    <div id="shopLogoPreview" class="shop-media-preview">${s.logo_url?`<img src="${esc(s.logo_url)}" alt="Shop logo">`:'<span>No logo uploaded</span>'}</div>
+    <input id="shopLogo" type="file" accept="image/jpeg,image/png,image/webp" onchange="previewShopMedia(this,'shopLogoPreview','logo')">
+  </div>
+  <div class="media-box">
+    <h3>Shop cover photo</h3>
+    <p class="muted">Large banner displayed at the top of your store.</p>
+    <div id="shopCoverPreview" class="shop-cover-preview">${s.cover_url?`<img src="${esc(s.cover_url)}" alt="Shop cover photo">`:'<span>No cover photo uploaded</span>'}</div>
+    <input id="shopCover" type="file" accept="image/jpeg,image/png,image/webp" onchange="previewShopMedia(this,'shopCoverPreview','cover')">
+  </div>
+</div>
+
+<div class="notice">Recommended cover size: <b>1600 × 500 px</b>. JPG, PNG or WebP, maximum 10 MB.</div>
+<div class="formgrid"><input id="shipFee" type="number" min="0" step="0.01" value="${Number(s.shipping_fee||0)}" placeholder="Shipping fee (MUR)"><input id="freeShip" type="number" min="0" step="0.01" value="${s.free_shipping_from??''}" placeholder="Free shipping from (MUR)"></div>
+<button class="btn primary" onclick="saveShop()">Save shop</button>
+</div>`}
+
+function previewShopMedia(input,targetId,type){
+ const f=input?.files?.[0]; if(!f)return;
+ if(!/^image\/(jpeg|png|webp)$/.test(f.type)){toast('Please choose a JPG, PNG or WebP image');input.value='';return}
+ if(f.size>10*1024*1024){toast('Image must be 10 MB or smaller');input.value='';return}
+ const reader=new FileReader();
+ reader.onload=()=>{$(targetId).innerHTML=`<img src="${reader.result}" alt="${type==='cover'?'Shop cover photo':'Shop logo'}">`};
+ reader.readAsDataURL(f);
+}
+
+async function uploadPublic(bucket,file,folder){if(!file)return null;let path=`${folder}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;let {error}=await sb.storage.from(bucket).upload(path,file,{upsert:true});if(error)throw error;return sb.storage.from(bucket).getPublicUrl(path).data.publicUrl}
+async function saveShop(){
+ try{
+  const name=($('shopName')?.value||'').trim();
+  if(!name){toast('Enter your shop name');$('shopName')?.focus();return}
+  if(!currentUser?.id){toast('Please log in again');return}
+
+  const logoFile=$('shopLogo')?.files?.[0],coverFile=$('shopCover')?.files?.[0];
+  const logo=await uploadPublic('shop-media',logoFile,currentUser.id);
+  const cover=await uploadPublic('shop-media',coverFile,currentUser.id);
+
+  const payload={
+   p_name:name,
+   p_description:($('shopDesc')?.value||'').trim(),
+   p_address:($('shopAddress')?.value||'').trim(),
+   p_phone:($('shopPhone')?.value||'').trim(),
+   p_logo:logo||shopData?.logo_url||'',
+   p_cover:cover||shopData?.cover_url||'',
+   p_shipping:Math.max(0,Number($('shipFee')?.value||0)),
+   p_free:($('freeShip')?.value||'')!==''?Math.max(0,Number($('freeShip').value)):null
+  };
+  const {data,error}=await sb.rpc('save_shopora_shop',payload);
+  if(error)throw error;
+  shopData={...(data||{}),name:data?.name||data?.shop_name||name};
+  toast('Shop profile saved successfully');
+  sellerTab='shop';
+  renderSeller();
+ }catch(e){
+  console.error('saveShop',e);
+  toast(e?.message||'Could not save shop profile');
+ }
+}
+
+function renderImagePreviews(urls){
+ let box=$('imagePreview');if(!box)return;
+ box.innerHTML=(urls||[]).slice(0,5).map(u=>`<img src="${esc(u)}" alt="Product image">`).join('');
+}
+function validateProductImages(){
+ let input=$('spImages'),files=[...(input?.files||[])],help=$('imageHelp');
+ if(files.length>5){toast('You can upload a maximum of 5 pictures');input.value='';if(help)help.textContent='Upload 2–5 clear pictures.';return false}
+ if(files.length>0)renderImagePreviews(files.map(f=>URL.createObjectURL(f)));
+ if(help)help.textContent=files.length===0?'Upload 2–5 clear pictures.':`${files.length} picture${files.length===1?'':'s'} selected.`;
+ return true;
+}
+async function saveProduct(id){
+ try{
+   let files=[...$('spImages').files];
+   const name=$('spName').value.trim();
+   const price=Number($('spPrice').value);
+   const stock=Number($('spStock').value);
+   if(!name){toast('Enter a product name');return}
+   if(!Number.isFinite(price)||price<=0){toast('Enter a valid price greater than 0 MUR');return}
+   if(!Number.isInteger(stock)||stock<0){toast('Enter a valid whole-number stock quantity');return}
+   if(files.length>5){toast('Maximum 5 pictures allowed');return}
+   if(!id && files.length<2){toast('Please upload at least 2 pictures for a new product');return}
+   if(id && files.length===1){toast('Please select 2–5 pictures when replacing product pictures');return}
+   if(files.some(f=>!f.type.startsWith('image/'))){toast('Only image files are allowed');return}
+   let urls=[];
+   for(let f of files){
+     if(f.size>10*1024*1024){toast(`${f.name} is larger than 10 MB`);return}
+     let u=await uploadPublic('product-images',f,currentUser.id);urls.push(u)
+   }
+   let {error}=await sb.rpc('save_shopora_product_v46',{
+     p_product:id||null,
+     p_name:name,
+     p_category:$('spCat').value||null,
+     p_price:price,
+     p_compare:null,
+     p_stock:stock,
+     p_description:$('spDesc').value.trim(),
+     p_brand:$('spBrand').value.trim(),
+     p_sku:$('spSku').value.trim(),
+     p_images:urls
+   });
+   if(error)throw error;
+   await loadSellerProducts();toast('Product saved');renderSeller()
+ }catch(e){toast(e.message)}
+}
+async function deleteSellerProduct(id){if(!confirm('Delete this product?'))return;let {error}=await sb.rpc('delete_shopora_product',{p_product:id});if(error)toast(error.message);else{await loadSellerProducts();renderSeller()}}
+
+function renderSeller(){
+ const body=$('sellerBody'); if(!body)return;
+ const tabs=[['dashboard','📊 Dashboard'],['shop','🏪 Shop profile'],['products','📦 Products'],['orders','🧾 Orders'],['reports','📈 Reports'],['payments','💳 Payments'],['returns','↩ Returns']];
+ let content;
+ if(sellerTab==='shop') content=sellerShop();
+ else if(sellerTab==='products') content=sellerProductsView();
+ else if(sellerTab==='orders') content=sellerOrderManager();
+ else if(sellerTab==='reports') content=sellerReportsView();
+ else if(sellerTab==='payments') content=sellerPaymentsView();
+ else if(sellerTab==='returns') content=sellerReturns();
+ else content=sellerDashboard();
+
+ body.innerHTML=`<div class="seller-layout">
+  <aside class="seller-sidebar">
+   ${tabs.map(([id,label])=>`<button class="seller-nav ${sellerTab===id?'active':''}" onclick="openSellerTab('${id}')">${label}</button>`).join('')}
+   <button class="seller-nav danger" onclick="logout()">↪ Log out</button>
+  </aside>
+  <main class="seller-main">${content}</main>
+ </div>`;
+}
+
+function sellerProductsView(){
+ return `<div class="seller-shell-title"><div class="mark">📦</div><div><h2>Products</h2><p>Add new products or edit products already in your store.</p></div></div>
+ <div class="product-actions"><button class="btn primary" onclick="sellerProductCategoryChooser('add')">＋ Add product</button><button class="btn" onclick="sellerProductCategoryChooser('edit')">✎ Edit products</button></div>
+ <div class="notice">Choose a category first. For editing, you will then see the products in that category with a search box.</div>`;
+}
+function sellerProductCategoryChooser(mode){
+ const opts=(categories||[]).map(c=>`<button class="cat" onclick="sellerProductCategorySelected('${c.id}','${esc(c.name)}','${mode}')"><span class="catIcon">${shopCategoryIcon(c.name)}</span><span>${esc(c.name)}</span></button>`).join('');
+ $('sellerBody').innerHTML=`<div class="seller-shell-title"><div class="mark">${mode==='add'?'＋':'✎'}</div><div><h2>${mode==='add'?'Choose a category':'Choose a category to edit'}</h2><p>Next, select the product you want to ${mode==='add'?'create':'edit'}.</p></div></div><div class="category-picker">${opts||'<div class="empty">No categories available.</div>'}</div><button class="btn" style="margin-top:15px" onclick="renderSeller()">← Back</button>`;
+}
+function sellerProductCategorySelected(id,name,mode){
+ if(mode==='add'){openProductEditor(null,id);return}
+ const products=(sellerProducts||[]).filter(p=>String(p.category_id||'')===String(id));
+ $('sellerBody').innerHTML=`<div class="seller-shell-title"><div class="mark">✎</div><div><h2>${esc(name)}</h2><p>Search and select a product to edit.</p></div></div><div class="product-searchbar"><input id="sellerProductSearch" placeholder="Search products in ${esc(name)}…" oninput="filterSellerProductPicker()"></div><div id="sellerProductPicker" class="product-picker"></div><button class="btn" style="margin-top:15px" onclick="sellerProductCategoryChooser('edit')">← Categories</button>`;
+ window.__editCategoryProducts=products;renderSellerProductPicker(products);
+}
+function renderSellerProductPicker(items){const el=$('sellerProductPicker');if(!el)return;el.innerHTML=items.map(p=>`<div class="product-pick"><img src="${esc(p.image_url||'')}" alt=""><div class="product-pick-main"><b>${esc(p.name)}</b><small>${money(p.price_mur??p.price)} · Stock ${Number(p.stock||0)}</small></div><button class="btn small primary" onclick="openProductEditor('${p.id}','${p.category_id||''}')">Edit</button></div>`).join('')||'<div class="empty">No products in this category.</div>'}
+function filterSellerProductPicker(){const q=($('sellerProductSearch')?.value||'').trim().toLowerCase();renderSellerProductPicker((window.__editCategoryProducts||[]).filter(p=>!q||String(p.name||'').toLowerCase().includes(q)||String(p.sku||'').toLowerCase().includes(q)))}
+
+function openProductEditor(id,categoryId){
+ const p=(sellerProducts||[]).find(x=>String(x.id)===String(id))||{};
+ sellerTab='products';
+ const opts=(categories||[]).map(c=>`<option value="${esc(c.name||c.slug||'')}">${esc(c.name||c.slug||'')}</option>`).join('');
+ const form=`<h2>${id?'Edit product':'Add product'}</h2>
+ <div class="form">
+  <input id="spName" value="${esc(p.name||'')}" placeholder="Product name">
+  <div class="formgrid"><input id="spPrice" type="number" min="0.01" step="0.01" value="${p.price_mur??p.price??''}" placeholder="Price (MUR)"><input id="spStock" type="number" min="0" step="1" value="${p.stock??0}" placeholder="Stock quantity"></div>
+  <select id="spCat"><option value="">Category</option>${opts}</select>
+  <div class="formgrid"><input id="spBrand" value="${esc(p.brand||'')}" placeholder="Brand (optional)"><input id="spSku" value="${esc(p.sku||'')}" placeholder="SKU (optional)"></div>
+  <textarea id="spDesc" rows="5" placeholder="Product description">${esc(p.description||'')}</textarea>
+  <label>Product pictures <b>(2–5)</b></label>
+  <input id="spImages" type="file" accept="image/*" multiple onchange="validateProductImages()">
+  <div id="imageHelp" class="muted">For a new product, select 2–5 pictures.</div>
+  <div id="imagePreview" class="image-preview"></div>
+  <button class="btn primary" onclick="saveProduct(${id?`'${id}'`:'null'})">Save product</button>
+  <button class="btn" onclick="renderSeller()">Cancel</button>
+ </div>`;
+ $('sellerBody').innerHTML=`<div class="seller-layout"><aside class="seller-sidebar">${[['dashboard','📊 Dashboard'],['shop','🏪 Shop profile'],['products','📦 Products'],['orders','🧾 Orders'],['payments','💳 Payments'],['returns','↩ Returns']].map(([x,l])=>`<button class="seller-nav ${x==='products'?'active':''}" onclick="openSellerTab('${x}')">${l}</button>`).join('')}<button class="seller-nav danger" onclick="logout()">↪ Log out</button></aside><main class="seller-main">${form}</main></div>`;
+ if(categoryId&&$('spCat'))$('spCat').value=categoryId; openModal('seller');setPageMode('seller');
+}
+
+function bankMark(bank){const b=String(bank||'').toLowerCase();if(b==='mcb')return '<span class="bank-logo mcb">MCB</span>';if(b==='maubank')return '<span class="bank-logo mau">MauBank</span>';return '<span class="bank-logo">BANK</span>'}
+function sellerPaymentsView(){return `<div class="seller-shell-title"><div class="mark">💳</div><div><h2>Payment methods</h2><p>Tell customers exactly how to pay your business.</p></div></div><div class="payment-panel"><h3>Business payment details</h3><p class="muted">Payment instructions are shown to customers at checkout. Never put your Supabase keys or passwords here.</p><button class="btn primary" onclick="addPaymentMethod()">＋ Add payment method</button></div><div style="margin-top:14px">${(shopData?.payment_methods||[]).map((m,i)=>{let bank=MAURITIUS_BANKS.find(b=>b.id===m.bank);return `<div class="bank-method">${bankMark(m.bank)}<div class="bank-method-main"><b>${esc(m.bank==='custom'?(m.name||'Payment method'):(bank?.name||m.name||'Payment method'))}</b><small>${esc(m.type==='juice'?`MCB Juice: ${m.juice_number||''}`:m.account_number?`Account: ${m.account_number}`:(m.details||''))}</small>${m.holder_name?`<small>Account holder: ${esc(m.holder_name)}</small>`:''}</div><button class="btn danger small" onclick="removePayment(${i})">Remove</button></div>`}).join('')||'<div class="empty">No payment methods configured.</div>'}</div>`}
+
+async function addPaymentMethod(){
+ try{
+  if(!currentUser?.id){toast('Please log in again');return}
+  if(!shopData?.id){toast('Create and save your shop profile first');sellerTab='shop';renderSeller();return}
+  const methods=MAURITIUS_BANKS;
+  $('sellerBody').innerHTML=`<div class="seller-layout"><aside class="seller-sidebar">${[['dashboard','📊 Dashboard'],['shop','🏪 Shop profile'],['products','📦 Products'],['orders','🧾 Orders'],['payments','💳 Payments'],['returns','↩ Returns']].map(([x,l])=>`<button class="seller-nav ${x==='payments'?'active':''}" onclick="openSellerTab('${x}')">${l}</button>`).join('')}<button class="seller-nav danger" onclick="logout()">↪ Log out</button></aside><main class="seller-main"><h2>Add payment method</h2><div class="notice">Choose the bank/payment service and enter the business payment details customers should use.</div><div class="form"><label>Bank / payment service</label><select id="sellerPayBank" onchange="renderPaymentForm()">${methods.map(b=>`<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('')}<option value="custom">💳 Custom payment method</option></select><div id="sellerPayForm"></div><div class="cardactions"><button class="btn primary" onclick="savePaymentMethod()">Save payment method</button><button class="btn" onclick="renderSeller()">Cancel</button></div></div></main></div>`;
+  renderPaymentForm();setPageMode('seller');
+ }catch(e){console.error('addPaymentMethod',e);toast(e?.message||'Could not open payment method form')}
+}
+function renderCustomerOrder(o){
+ const pk=o.packages||[];
+ return `<div class="order">
+  <div class="orderhead">
+   <div><b>${esc(o.order_number||'Order')}</b><br><small>${o.created_at?new Date(o.created_at).toLocaleString():''}</small></div>
+   <span class="status ${esc(o.status||'')}">${esc(String(o.status||'pending').replaceAll('_',' '))}</span>
+  </div>
+  <h3>${money(o.total)}</h3>
+  ${pk.map(p=>`<div class="order" style="background:#f8fafc">
+    <div class="orderhead"><div><b>${esc(p.shop_name||'Seller')}</b>${p.seller_phone?`<br>${whatsappButton(p.seller_phone)}`:''}</div><span class="status ${esc(p.status||'')}">${esc(String(p.status||'pending').replaceAll('_',' '))}</span></div>
+    <p>${(p.items||[]).map(i=>`${esc(i.name||'Product')} × ${Number(i.quantity||0)}`).join(' · ')||'No items'}</p>
+    <p>Payment: <b>${esc(p.payment_status||o.payment_status||'pending')}</b></p>
+    ${p.tracking?`<p>Tracking: <b>${esc(p.tracking)}</b>${p.carrier?` · ${esc(p.carrier)}`:''}</p>`:''}
+    ${p.status==='delivered'?`<div class="notice" style="margin:10px 0"><b>Your package is marked delivered.</b><br>Please confirm that you received it.</div><button class="btn success" onclick="confirmReceived('${p.id}')">✓ Confirm received</button>`:''}
+    ${p.status==='completed'?`<div class="order-actions"><span class="status completed">✓ Received</span><button class="btn" onclick="openReview('${p.id}')">⭐ Review item</button><button class="btn danger" onclick="openComplaint('${p.id}')">⚠ Report problem</button></div>`:''}
+  </div>`).join('')||'<div class="empty">No seller package information.</div>'}
+ </div>`;
+}
+
+function renderSellerOrders(list){return (list||[]).map(o=>`<div class="order-card"><div class="order-top"><div><b>${esc(o.order_number||'Order')}</b><div style="margin-top:5px;font-weight:700">${esc(o.customer_name||'Customer')}</div></div><span class="status ${esc(o.status||'')}">${esc(String(o.status||'pending').replaceAll('_',' '))}</span></div><div class="order-meta"><span class="meta-chip">📱 ${esc(o.customer_phone||'No WhatsApp')}</span><span class="meta-chip">🛒 ${(o.items||[]).map(i=>`${esc(i.name||'Product')} × ${Number(i.quantity||0)}`).join(' · ')}</span><span class="meta-chip">💰 ${Number(o.total||0).toLocaleString('en-MU')} MUR</span><span class="meta-chip">💳 ${esc(o.payment_method||'Not specified')}</span><span class="meta-chip">Payment: ${esc(o.payment_status||'pending')}</span></div><p style="margin:7px 0">📍 ${esc([o.delivery?.line1||o.delivery?.address_text,o.delivery?.city,o.delivery?.country].filter(Boolean).join(', ')||'Address unavailable')}</p>${o.tracking_number?`<p class="muted">Tracking: ${esc(o.tracking_number)}${o.carrier?` · ${esc(o.carrier)}`:''}</p>`:''}<div class="order-actions">${whatsappButton(o.customer_phone)}${o.payment_status==='pending'?`<button class="btn success" onclick="sellerAction('${o.seller_order_id}','payment')">✓ Confirm payment</button>`:''}${o.payment_status==='paid'&&['processing','payment_pending'].includes(o.status)?`<button class="btn" onclick="sellerAction('${o.seller_order_id}','packed')">📦 Pack</button>`:''}${o.status==='packed'?`<button class="btn primary" onclick="shipOrder('${o.seller_order_id}')">🚚 Ship</button>`:''}${o.status==='shipped'?`<button class="btn" onclick="sellerAction('${o.seller_order_id}','delivered')">✓ Mark delivered</button>`:''}</div></div>`).join('')||'<div class="empty">No orders.</div>'}
+
+async function sellerAction(id,action){
+ if(!id)return;
+ try{
+  if(action==='payment'){
+   if(!confirm('Confirm that payment has been received for this order?'))return;
+   const {error}=await sb.rpc('seller_confirm_shopora_payment',{p_seller_order:id});
+   if(error)throw error;
+  }else{
+   const {error}=await sb.rpc('seller_set_shopora_order_status',{
+    p_seller_order:id,p_status:action,p_tracking:null,p_carrier:null,p_note:null
+   });
+   if(error)throw error;
+  }
+  toast(action==='payment'?'Payment confirmed':`Order marked ${action}`);
+  await loadSellerOrders();renderSeller();
+ }catch(e){toast(e.message||'Could not update order')}
+}
+
+async function shipOrder(id){
+ const tracking=prompt('Tracking number (optional):','');
+ if(tracking===null)return;
+ const carrier=prompt('Carrier / delivery service (optional):','');
+ if(carrier===null)return;
+ try{
+  const {error}=await sb.rpc('seller_set_shopora_order_status',{
+   p_seller_order:id,p_status:'shipped',
+   p_tracking:tracking.trim()||null,p_carrier:carrier.trim()||null,p_note:null
+  });
+  if(error)throw error;
+  toast('Order shipped');
+  await loadSellerOrders();renderSeller();
+ }catch(e){toast(e.message||'Could not ship order')}
+}
+
+async function packAllPaid(){
+ const a=(sellerOrders||[]).filter(o=>o.payment_status==='paid'&&['processing','payment_pending'].includes(o.status));
+ if(!a.length){toast('No paid orders waiting to pack');return}
+ if(!confirm(`Pack ${a.length} order(s)?`))return;
+ for(const o of a){
+  const {error}=await sb.rpc('seller_set_shopora_order_status',{
+   p_seller_order:o.seller_order_id,p_status:'packed',p_tracking:null,p_carrier:null,p_note:null
+  });
+  if(error){toast(error.message);return}
+ }
+ await loadSellerOrders();renderSeller();toast('Paid orders packed');
+}
+
+function sellerOrderManager(){return `<h2>Order Manager</h2>
+<div class="notice">All orders from your shop appear here. Confirm payment first, then pack and ship the order. Customers can confirm receipt after delivery.</div>
+<div class="filters">
+ <input id="sellerSearch" placeholder="Search order/customer" oninput="filterSellerOrders()">
+ <select id="sellerStatus" onchange="filterSellerOrders()"><option value="">All statuses</option><option value="payment_pending">Payment pending</option><option value="processing">Processing</option><option value="packed">Packed</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="completed">Completed</option></select>
+ <button class="btn" onclick="loadSellerOrders().then(()=>renderSeller())">Refresh</button>
+</div>
+<div id="sellerOrdersList">${renderSellerOrders(sellerOrders)}</div>`}
+function renderSellerPayment(m,i){
+ let bank=MAURITIUS_BANKS.find(b=>b.id===m.bank);
+ let title=m.bank==='custom'?(m.name||'Payment method'):(bank?.name||m.name||'Payment method');
+ let detail=m.type==='juice'?`MCB Juice: ${m.juice_number||''}`:m.account_number?`Account: ${m.account_number}`:(m.details||'');
+ return `<div class="order" style="display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:10px">
+   <div style="display:flex;align-items:center;gap:12px"><span class="bankLogo">${esc(bank?.logo||'💳')}</span><div><b>${esc(title)}</b><p style="margin:5px 0 0">${esc(detail)}</p>${m.holder_name?`<small>Account holder: ${esc(m.holder_name)}</small>`:''}</div></div>
+   <button class="btn danger small" onclick="removePayment(${i})">Remove</button>
+ </div>`;
+}
+function renderPaymentForm(){
+ let id=$('sellerPayBank')?.value||'mcb',b=MAURITIUS_BANKS.find(x=>x.id===id);
+ let form=$('sellerPayForm');if(!form)return;
+ if(id==='custom'){
+   form.innerHTML=`<div class="formgrid"><input id="customPayName" placeholder="Payment method name (e.g. Cash on delivery)"><input id="customPayDetails" placeholder="Payment instructions"></div>`;
+ }else if(id==='mcb'){
+   form.innerHTML=`<label>MCB payment type</label><select id="mcbPayType" onchange="renderMcbFields()"><option value="account">MCB Account number</option><option value="juice">MCB Juice number</option></select><div id="mcbFields" style="margin-top:10px"></div>`;
+   renderMcbFields();
+ }else{
+   form.innerHTML=`<input id="bankAccountNumber" inputmode="numeric" placeholder="${esc(b.name)} account number"><input id="bankHolderName" style="margin-top:10px" placeholder="Account holder / business name">`;
+ }
+}
+function renderMcbFields(){
+ let type=$('mcbPayType')?.value||'account',form=$('mcbFields');if(!form)return;
+ form.innerHTML=type==='juice'
+  ? `<input id="mcbJuiceNumber" inputmode="numeric" placeholder="MCB Juice mobile number"><input id="mcbHolderName" style="margin-top:10px" placeholder="Account / business name">`
+  : `<input id="mcbAccountNumber" inputmode="numeric" placeholder="MCB account number"><input id="mcbHolderName" style="margin-top:10px" placeholder="Account / business name">`;
+}
+async function savePaymentMethod(){
+ try{
+  if(!shopData?.id){toast('Create and save your shop profile first');return}
+  let id=$('sellerPayBank')?.value||'mcb',b=MAURITIUS_BANKS.find(x=>x.id===id),m;
+  if(id==='custom'){
+   let name=$('customPayName')?.value.trim(),details=$('customPayDetails')?.value.trim();
+   if(!name||!details){toast('Enter the payment method name and instructions');return}
+   m={bank:'custom',name,details,type:'custom'};
+  }else if(id==='mcb'){
+   let type=$('mcbPayType')?.value||'account',holder=$('mcbHolderName')?.value.trim();
+   if(!holder){toast('Enter the account holder / business name');return}
+   if(type==='juice'){
+    let juice=$('mcbJuiceNumber')?.value.trim();
+    if(!juice){toast('Enter your MCB Juice number');return}
+    m={bank:'mcb',name:'MCB Juice',type:'juice',juice_number:juice,holder_name:holder,details:`MCB Juice: ${juice}`};
+   }else{
+    let account=$('mcbAccountNumber')?.value.trim();
+    if(!account){toast('Enter your MCB account number');return}
+    m={bank:'mcb',name:'MCB Bank Account',type:'account',account_number:account,holder_name:holder,details:`MCB Account: ${account}`};
+   }
+  }else{
+   let account=$('bankAccountNumber')?.value.trim(),holder=$('bankHolderName')?.value.trim();
+   if(!account||!holder){toast('Enter the account number and account holder / business name');return}
+   m={bank:id,name:b?.name||id,type:'account',account_number:account,holder_name:holder,details:`${b?.name||id} Account: ${account}`};
+  }
+  const methods=[...(shopData.payment_methods||[]),m];
+  const {data,error}=await sb.rpc('save_shopora_payment_methods',{p_methods:methods});
+  if(error)throw error;
+  shopData={...(data||{}),name:data?.name||data?.shop_name||shopData.name,payment_methods:data?.payment_methods||methods};
+  toast('Payment method added successfully');
+  sellerTab='payments';renderSeller();
+ }catch(e){console.error('savePaymentMethod',e);toast(e?.message||'Could not save payment method')}
+}
+async function removePayment(i){
+ let m=[...(shopData.payment_methods||[])];m.splice(i,1);
+ let {data,error}=await sb.rpc('save_shopora_payment_methods',{p_methods:m});
+ if(error)toast(error.message);else{shopData={...(data||{}),name:data?.name||data?.shop_name||shopData?.name||''};toast('Payment method removed');renderSeller()}
+}
+function sellerReturns(){return `<h2>Returns & refunds</h2><div class="notice">Return requests appear here when customers request a return. The next production phase can connect approved returns to your chosen refund provider.</div>`}
+function filterSellerOrders(){
+ const q=($('sellerSearch')?.value||'').toLowerCase(),st=$('sellerStatus')?.value||'';
+ const list=sellerOrders.filter(o=>(!q||`${o.order_number} ${o.customer_name} ${o.customer_phone}`.toLowerCase().includes(q))&&(!st||o.status===st));
+ if($('sellerOrdersList'))$('sellerOrdersList').innerHTML=renderSellerOrders(list);
+}
+
+async function openShopMessage(shopId){
+ if(!currentUser){openAuth('login');return}
+ const {data,error}=await sb.rpc('get_shopora_messages',{p_shop_id:shopId});if(error){toast(error.message);return}
+ const shopName=shopPage?.name||'Seller';
+ $('notificationsBody').innerHTML=`<div class="seller-shell-title"><div class="mark">💬</div><div><h2>Message ${esc(shopName)}</h2><p>Messages you delete are removed only from your view.</p></div></div><div id="messageList" class="message-list">${(data||[]).map(renderMessage).join('')||'<div class="empty">No messages yet.</div>'}</div><form class="form" style="margin-top:12px" onsubmit="sendShopMessage(event,'${shopId}')"><textarea id="messageText" rows="3" maxlength="2000" placeholder="Write your message…" required></textarea><button class="btn primary">Send message</button></form>`;openModal('notifications');
+}
+function renderMessage(m){const mine=String(m.sender_id)===String(currentUser?.id);return `<div class="message-row ${mine?'mine':''}"><b>${mine?'You':esc(m.sender_name||'Seller')}</b><p>${esc(m.body)}</p><small>${new Date(m.created_at).toLocaleString()}</small>${mine?`<div class="message-actions"><button class="btn small danger" onclick="deleteMessageForMe('${m.id}')">Delete for me</button></div>`:''}</div>`}
+async function sendShopMessage(e,shopId){e.preventDefault();const body=$('messageText').value.trim();if(!body)return;const {error}=await sb.rpc('send_shopora_message',{p_shop_id:shopId,p_body:body});if(error){toast(error.message);return}openShopMessage(shopId)}
+async function deleteMessageForMe(id){if(!confirm('Delete this message only from your view?'))return;const {error}=await sb.rpc('delete_shopora_message_for_me',{p_message_id:id});if(error)toast(error.message);else if(shopPage?.id)openShopMessage(shopPage.id)}
+async function openReview(sellerOrderId){
+ const rating=prompt('Rating from 1 to 5:', '5');if(rating===null)return;const r=Math.max(1,Math.min(5,Number(rating)||5));const title=prompt('Review title:','Good purchase')||'';const body=prompt('Review:','')||'';
+ const {data:items,error}=await sb.rpc('get_shopora_received_items',{p_seller_order:sellerOrderId});if(error){toast(error.message);return}const item=items?.[0];if(!item){toast('No reviewable item found');return}const {error:e}=await sb.rpc('add_shopora_review',{p_product:item.product_id,p_order_item:item.order_item_id,p_rating:r,p_title:title,p_body:body});toast(e?e.message:'Review submitted');
+}
+async function openComplaint(sellerOrderId){const reason=prompt('Describe the problem with this order:');if(!reason?.trim())return;const {error}=await sb.rpc('create_shopora_complaint',{p_seller_order:sellerOrderId,p_body:reason.trim()});toast(error?error.message:'Complaint submitted to Shopora support')}
+
+async function init(){
+ await handleRecoveryRoute();
+  try{
+    if(!cfg.SUPABASE_URL||!cfg.SUPABASE_PUBLISHABLE_KEY){
+      throw new Error('Supabase configuration is missing');
+    }
+    const {data,error}=await sb.auth.getSession();
+    if(error)throw error;
+    await setAuthUser(data.session);
+
+    sb.auth.onAuthStateChange((_e,s)=>{
+      setAuthUser(s).catch(err=>console.error('Auth state update failed',err));
+      if(s?.user&&!s.user.email_confirmed_at){
+        sb.auth.signOut();
+        toast('Please verify your email before using your account.');
+      }
+    });
+
+    // Categories and products are independent requests. One failure must not blank the other.
+    await Promise.allSettled([loadCategories(),loadCatalog()]);
+    saveCart();
+  }catch(e){
+    console.error('Shopora startup error:',e);
+    toast(e?.message||'Shopora could not start');
+    if($('categories') && !$('categories').children.length)
+      $('categories').innerHTML='<div class="error" style="grid-column:1/-1">Shopora could not load marketplace data. Check the Supabase migration and connection.</div>';
+    if($('products') && !$('products').children.length)
+      $('products').innerHTML='<div class="error" style="grid-column:1/-1">Shopora could not load products. Open the browser console for the exact error.</div>';
+  }
+}
+init();
+</script>
+</body>
+</html>
